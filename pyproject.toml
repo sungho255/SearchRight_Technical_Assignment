@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.13"
 psycopg2-binary = "^2.9.10"
 openai = "^1.75.0"
+sqlalchemy = "^2.0.41"
 
 
 [build-system]
