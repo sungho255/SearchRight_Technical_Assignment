@@ -1,11 +1,10 @@
 # company_dao.py
 from sqlalchemy.orm import Session
-from VO.company import Company
-from DAO.conn import SessionLocal  # 경로 일관성 있게 수정
+from ..models.company import Company 
 
 class CompanyDAO:
-    def __init__(self):
-        self.db: Session = SessionLocal()
+    def __init__(self, db: Session):
+        self.db = db
 
     def get_by_id(self, company_id: int):
         return self.db.query(Company).filter(Company.id == company_id).first()
@@ -39,5 +38,4 @@ class CompanyDAO:
         self.db.commit()
         return True
 
-    def close(self):
-        self.db.close()
+    

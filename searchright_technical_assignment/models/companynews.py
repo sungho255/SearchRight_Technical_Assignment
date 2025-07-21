@@ -1,7 +1,7 @@
 # company.py
 from sqlalchemy import Column, Integer, String, Date
 from sqlalchemy.dialects.postgresql import JSON 
-from DAO.conn import Base
+from ..db.conn import Base
 
 class CompanyNews(Base):
     __tablename__ = 'company_news'

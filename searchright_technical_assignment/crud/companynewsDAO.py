@@ -1,12 +1,11 @@
 # DAO/companynews_dao.py
 
 from sqlalchemy.orm import Session
-from DAO.conn import SessionLocal  # 경로 일관성 유지
-from VO.companynews import CompanyNews
+from ..models.companynews import CompanyNews
 
 class CompanyNewsDAO:
-    def __init__(self):
-        self.db: Session = SessionLocal()
+    def __init__(self, db: Session):
+        self.db = db
 
     def get_by_id(self, news_id: int):
         return self.db.query(CompanyNews).filter(CompanyNews.id == news_id).first()
@@ -40,5 +39,4 @@ class CompanyNewsDAO:
         self.db.commit()
         return True
 
-    def close(self):
-        self.db.close()
+    
