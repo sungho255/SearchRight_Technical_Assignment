@@ -11,7 +11,7 @@ from pydantic import BaseModel
 # DB
 
 # Module
-from .routers import company, companynews
+from .routers import company_dto, companynews_dto
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -34,9 +34,11 @@ app = FastAPI()
 @app.get("/")
 def say_hello():
     return {"message": "Hello world from FastAPI1111111"}
- 
-app.include_router(company.router)
-app.include_router(companynews.router)
+
+# 회사  
+app.include_router(company_dto.router)
+# 회사 뉴스
+app.include_router(companynews_dto.router)
 
 
 print(f'Documents: http://localhost:8000/docs')

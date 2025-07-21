@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from ..crud.companynewsDAO import CompanyNewsDAO
-from ..schemas.companynews import CompanyNewsSchema # Assuming you will create this schema
+from ..crud.companynews_dao import CompanyNewsDAO
+from ..schemas.companynews import CompanyNewsSchema
 from ..db.conn import get_db
 
 router = APIRouter()

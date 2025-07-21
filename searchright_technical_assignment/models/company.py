@@ -1,4 +1,3 @@
-# company.py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.postgresql import JSON 
 from ..db.conn import Base

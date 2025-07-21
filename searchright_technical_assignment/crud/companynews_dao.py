@@ -1,5 +1,3 @@
-# DAO/companynews_dao.py
-
 from sqlalchemy.orm import Session
 from ..models.companynews import CompanyNews
 

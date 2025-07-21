@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from ..crud.companyDAO import CompanyDAO
+from ..crud.company_dao import CompanyDAO
 from ..schemas.company import CompanySchema
 from ..db.conn import get_db
 

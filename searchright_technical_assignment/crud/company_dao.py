@@ -1,4 +1,3 @@
-# company_dao.py
 from sqlalchemy.orm import Session
 from ..models.company import Company 
 
