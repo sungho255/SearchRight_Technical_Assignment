@@ -55,7 +55,7 @@ def insert_company_data():
 
     except Exception as e:
         db.rollback()
-        print(f"An error occurred during company data insertion: {e}")
+        print(f"회사 데이터 삽입 중 오류 발생: {e}")
         print(traceback.format_exc())
     finally:
         db.close()

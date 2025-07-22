@@ -17,6 +17,12 @@ gunicorn = "^22.0.0"
 pgvector = "^0.4.1"
 numpy = "^2.3.1"
 pandas = "^2.3.1"
+aiohttp = "^3.12.14"
+chardet = "^5.2.0"
+trafilatura = "^1.9.9" # trafilatura 라이브러리 추가
+selenium = "^4.34.2"
+bs4 = "^0.0.2"
+langchain = "^0.3.26"
 
 
 [build-system]

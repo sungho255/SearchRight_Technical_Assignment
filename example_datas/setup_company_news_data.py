@@ -216,7 +216,9 @@ def main():
             return
 
         # 뉴스 데이터 로드
-        news_data = load_news_data("company_news.csv")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        news_csv_path = os.path.join(script_dir, "company_news.csv")
+        news_data = load_news_data(news_csv_path)
         if not news_data:
             logger.error("뉴스 데이터를 로드하지 못했습니다. 프로세스를 중단합니다.")
             return

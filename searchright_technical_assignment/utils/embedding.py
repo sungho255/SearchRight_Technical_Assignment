@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 import asyncio
 from typing import List, Dict, Any
+from tqdm import tqdm # tqdm 임포트
 
 # .env 파일 로드
 load_dotenv()
@@ -36,14 +37,13 @@ async def generate_embedding(texts: List[str]) -> List[List[float]]:
 
     # 배치 처리
     client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-    total_batches = (len(texts_to_embed) + BATCH_SIZE - 1) // BATCH_SIZE
-    print(f"총 {len(texts_to_embed)}개의 텍스트를 임베딩합니다. 배치 사이즈: {BATCH_SIZE}, 총 배치 수: {total_batches}")
+    print(f"총 {len(texts_to_embed)}개의 텍스트를 임베딩합니다. 배치 사이즈: {BATCH_SIZE}")
 
-    for batch_num, i in enumerate(range(0, len(texts_to_embed), BATCH_SIZE)):
+    # tqdm을 사용하여 배치 처리 루프에 진행률 표시줄을 추가합니다.
+    for batch_num, i in enumerate(tqdm(range(0, len(texts_to_embed), BATCH_SIZE), desc="임베딩 배치 처리 중", unit="배치")):
         batch_texts = texts_to_embed[i:i + BATCH_SIZE]
         batch_indices = indices_to_embed[i:i + BATCH_SIZE]
-        print(f"  - 배치 {batch_num + 1}/{total_batches} 임베딩 중... (텍스트 수: {len(batch_texts)})")
-
+        
         try:
             response = await client.embeddings.create(
                 input=batch_texts,
@@ -53,13 +53,11 @@ async def generate_embedding(texts: List[str]) -> List[List[float]]:
                 original_index = batch_indices[j]
                 results[original_index] = embedding.embedding
                 embedding_cache[batch_texts[j]] = embedding.embedding # 캐시에 저장
-            print(f"  - 배치 {batch_num + 1}/{total_batches} 임베딩 완료.")
         except Exception as e:
-            print(f"  - 배치 {batch_num + 1}/{total_batches} 임베딩 중 오류 발생: {e}")
-            # 오류 발생 시 해당 텍스트에 대한 임베딩은 빈 리스트로 처리하거나,
-            # 필요에 따라 다른 오류 처리 로직을 추가할 수 있습니다.
+            tqdm.write(f"  - 배치 {batch_num + 1} 임베딩 중 오류 발생: {e}") # tqdm.write를 사용하여 오류 메시지 출력
+            # 오류 발생 시 해당 배치 내 모든 텍스트에 대해 None 할당
             for j in range(len(batch_texts)):
                 original_index = batch_indices[j]
-                results[original_index] = [] # 또는 None, 오류 값 등
+                results[original_index] = None
 
     return results

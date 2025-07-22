@@ -130,8 +130,9 @@ def main():
         # company 테이블 생성
         create_company_table(conn)
 
-        # 회사 데이터 파일 찾기
-        company_files = glob.glob(os.path.join("company_ex*.json"))
+        # 스크립트 디렉토리 기준 파일 찾기
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        company_files = glob.glob(os.path.join(script_dir, "company_ex*.json"))
         logger.info(f"{len(company_files)}개의 회사 데이터 파일을 찾았습니다.")
 
         # 데이터 처리 및 삽입

@@ -13,13 +13,19 @@ from searchright_technical_assignment.models.companynews import CompanyNews
 from searchright_technical_assignment.models.company import Company
 from searchright_technical_assignment.utils.embedding import generate_embedding
 
-async def insert_company_news_data(): # 함수를 비동기 함수로 변경
+# class insert_company_news_data: # 함수를 비동기 함수로 변경
+#     def __init__(self, db: Session):
+#         self.db = db
+    
+#     def load_news_data()
+    
+async def insert_company_news_data(): 
     db: Session = SessionLocal()
     try:
         print("1. CSV 파일 읽기 시작...")
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(script_dir, '..', '..', 'example_datas', 'company_news.csv')
-        df = pd.read_csv(csv_path)
+        csv_path = os.path.join(script_dir, '..', '..', 'example_datas', 'company_news_with_content_chunked.csv')
+        df = pd.read_csv(csv_path, encoding='utf-8')
         
         print(f"2. CSV 파일 읽기 완료. 총 {len(df)}개 뉴스 항목.")
         
@@ -31,9 +37,9 @@ async def insert_company_news_data(): # 함수를 비동기 함수로 변경
 
         print("3. 임베딩 생성 시작...")
         # 모든 뉴스 제목을 수집하여 배치 임베딩을 준비합니다.
-        titles_to_embed = df['title'].tolist()
+        combined_embed = df['chunked_content'].tolist()
         # 비동기 임베딩 함수를 await 키워드로 호출합니다.
-        all_title_embeddings = await generate_embedding(titles_to_embed)
+        all_combined_embeddings = await generate_embedding(combined_embed)
         print("임베딩 생성 완료.")
 
         # example_datas 디렉토리 경로 설정
@@ -73,10 +79,10 @@ async def insert_company_news_data(): # 함수를 비동기 함수로 변경
                 company_map[company_name] = company_id # 새로 추가된 회사 맵에 반영
             
             # 미리 생성된 임베딩을 인덱스를 통해 가져옵니다.
-            title_embedding = all_title_embeddings[index]
+            combined_embedding = all_combined_embeddings[index]
 
             # 임베딩이 비어있는지 확인 (generate_embedding에서 오류 시 빈 리스트 반환 가능성)
-            if not title_embedding:
+            if not combined_embedding:
                 print(f"Warning: Empty embedding for title: {row['title']}. Skipping this news item.")
                 skipped_count += 1 # 임베딩 오류도 건너뛴 것으로 처리
                 continue # 해당 뉴스 항목 건너뛰기
@@ -98,7 +104,9 @@ async def insert_company_news_data(): # 함수를 비동기 함수로 변경
             news_item = CompanyNews(
                 company_id=company_id,
                 title=row['title'],
-                title_embedding=title_embedding,
+                content=row['chunked_content'],
+                chunk_index=row['chunk_index'],
+                combined_embedding=combined_embedding,
                 original_link=row['original_link'],
                 news_date=news_date_obj
             )
@@ -117,5 +125,5 @@ async def insert_company_news_data(): # 함수를 비동기 함수로 변경
     finally:
         db.close()
 
-# if __name__ == "__main__":
-#     asyncio.run(insert_data()) # 비동기 함수를 실행하도록 변경
+if __name__ == "__main__":
+    asyncio.run(insert_company_news_data()) # 비동기 함수를 실행하도록 변경

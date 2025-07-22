@@ -1,4 +1,4 @@
-# Base
+# 기본
 import os
 from dotenv import load_dotenv
 
@@ -10,8 +10,8 @@ from pydantic import BaseModel
 
 # DB
 
-# Module
-from .routers import company_dto, companynews_dto
+# 모듈
+from searchright_technical_assignment.routers import company_dto, companynews_dto
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -41,7 +41,7 @@ app.include_router(company_dto.router)
 app.include_router(companynews_dto.router)
 
 
-print(f'Documents: http://localhost:8000/docs')
+print(f'문서: http://localhost:8000/docs')
 
 if __name__ == '__main__': 
     uvicorn.run("main:app", reload=True)
