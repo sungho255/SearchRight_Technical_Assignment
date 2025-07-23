@@ -6,7 +6,7 @@ import traceback
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
 from searchright_technical_assignment.db.conn import SessionLocal
-from searchright_technical_assignment.models.company import Company
+from searchright_technical_assignment.model.company import Company
 
 def insert_company_data():
     db: Session = SessionLocal()

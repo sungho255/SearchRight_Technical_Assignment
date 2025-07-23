@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Text, Index
 from sqlalchemy.dialects.postgresql import JSON 
 from pgvector.sqlalchemy import Vector # pgvector 임포트
-from ..db.conn import Base
+from db.conn import Base
 
 class CompanyNews(Base):
     __tablename__ = 'company_news'

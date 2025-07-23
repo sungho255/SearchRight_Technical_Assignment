@@ -1,7 +1,7 @@
 import logging
 from searchright_technical_assignment.db.conn import engine, Base, SessionLocal
-from searchright_technical_assignment.models.company import Company # Company 모델 임포트
-from searchright_technical_assignment.models.companynews import CompanyNews # CompanyNews 모델 임포트
+from searchright_technical_assignment.model.company import Company # Company 모델 임포트
+from searchright_technical_assignment.model.companynews import CompanyNews # CompanyNews 모델 임포트
 from searchright_technical_assignment.db.insert_company_data import insert_company_data
 from searchright_technical_assignment.db.insert_company_news_data import insert_company_news_data
 import asyncio # asyncio 임포트

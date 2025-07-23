@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.postgresql import JSON 
-from ..db.conn import Base
+from db.conn import Base
 
 class Company(Base):
     __tablename__ = 'company'

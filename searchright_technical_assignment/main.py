@@ -11,7 +11,7 @@ from pydantic import BaseModel
 # DB
 
 # 모듈
-from searchright_technical_assignment.routers import company_dto, companynews_dto
+from router import company_router, companynews_router, profilling_router
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -36,10 +36,11 @@ def say_hello():
     return {"message": "Hello world from FastAPI1111111"}
 
 # 회사  
-app.include_router(company_dto.router)
+app.include_router(company_router.router)
 # 회사 뉴스
-app.include_router(companynews_dto.router)
-
+app.include_router(companynews_router.router)
+# Profilling
+app.include_router(profilling_router.router)
 
 print(f'문서: http://localhost:8000/docs')
 

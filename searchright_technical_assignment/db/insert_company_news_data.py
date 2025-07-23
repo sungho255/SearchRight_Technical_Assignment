@@ -8,10 +8,10 @@ import traceback # traceback 모듈 임포트
 
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
-from searchright_technical_assignment.db.conn import SessionLocal, get_db
-from searchright_technical_assignment.models.companynews import CompanyNews
-from searchright_technical_assignment.models.company import Company
-from searchright_technical_assignment.utils.embedding import generate_embedding
+from ..db.conn import SessionLocal, get_db
+from ..model.companynews import CompanyNews
+from ..model.company import Company
+from ..util.embedding import generate_embedding
 
 # class insert_company_news_data: # 함수를 비동기 함수로 변경
 #     def __init__(self, db: Session):

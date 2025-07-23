@@ -9,7 +9,7 @@ def chunk_and_save_csv():
     """
     # 파일 경로 정의
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # utils 디렉토리의 상위 디렉토리인 searchright_technical_assignment를 기준으로 경로 설정
+    # util 디렉토리의 상위 디렉토리인 searchright_technical_assignment를 기준으로 경로 설정
     base_dir = os.path.dirname(script_dir)
     input_csv_path = os.path.join(base_dir, '..', 'example_datas', 'company_news_with_content.csv')
     output_csv_path = os.path.join(base_dir, '..', 'example_datas', 'company_news_with_content_chunked.csv')

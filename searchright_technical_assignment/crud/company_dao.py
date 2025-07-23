@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models.company import Company 
+from model.company import Company 
 
 class CompanyDAO:
     def __init__(self, db: Session):

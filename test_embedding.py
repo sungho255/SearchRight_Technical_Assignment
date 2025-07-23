@@ -1,7 +1,7 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-from searchright_technical_assignment.utils.embedding import generate_embedding
+from searchright_technical_assignment.util.embedding import generate_embedding
 
 # .env 파일 로드
 load_dotenv()
