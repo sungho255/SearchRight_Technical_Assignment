@@ -1,21 +1,17 @@
 # DB
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, List, Dict
 
 class ProfilingState(TypedDict):
     college: Annotated[str, "대학"]
     college_level: Annotated[str, "대학 수준"]
+    skills: Annotated[List, "능력"]
+    titles: Annotated[List, "포지션 제목"]
+    leadership: Annotated[str, "리더쉽"]
+    leadership_reason: Annotated[List, "리더쉽 근거"]
+    company_names: Annotated[List, "기업 리스트"]
+    investment: Annotated[Dict,"투자 유치 시기 및 금액 (스타트업 여부 파악)"]
+    organiztion: Annotated[Dict, "재직자 수 (규모 확인)"]
+    company_size: Annotated[str, "기업 규모"]
     
+    profile: Annotated[Dict, "프로파일"]
     
-    
-    # job: Annotated[str, "직무"]
-    # company_id: Annotated[int, '회사 식별자']
-    # applicant_id: Annotated[int, '지원자 식별자']
-    # resume_query: Annotated[str, "맨 처음 resume에 들어가는 query list"]
-    # evaluation_query: Annotated[str, "맨 처음 evaluation에 들어가는 query list"]
-    # resume: Annotated[str, "지원자 자소서"]
-    # resume_chunk: Annotated[list, '검색한 청크 리스트']
-    # evaluation: Annotated[str, "회사기준 DB"]
-    # relevance_1: Annotated[str, '관련성 체크(Yes or No)']
-    # relevance_2: Annotated[str, '관련성 체크(Yes or No)']
-    # fact: Annotated[str, '관련성 체크(Yes or No)']
-    # final_question: Annotated[str, "생성된 질문"]

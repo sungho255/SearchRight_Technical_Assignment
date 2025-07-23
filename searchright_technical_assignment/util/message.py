@@ -430,16 +430,17 @@ def invoke_graph(
                 print("- " * 25)
 
                 # 노드의 청크 데이터 출력
-                for k, v in node_chunk.items():
-                    if isinstance(v, BaseMessage):
-                        v.pretty_print()
-                    elif isinstance(v, list):
-                        for list_item in v:
-                            if isinstance(list_item, BaseMessage):
-                                list_item.pretty_print()
-                            else:
-                                print(list_item)
-                    elif isinstance(v, dict):
-                        for node_chunk_key, node_chunk_value in node_chunk.items():
-                            print(f"{node_chunk_key}:\n{node_chunk_value}")
+                if node_chunk is not None:
+                    for k, v in node_chunk.items():
+                        if isinstance(v, BaseMessage):
+                            v.pretty_print()
+                        elif isinstance(v, list):
+                            for list_item in v:
+                                if isinstance(list_item, BaseMessage):
+                                    list_item.pretty_print()
+                                else:
+                                    print(list_item)
+                        elif isinstance(v, dict):
+                            for node_chunk_key, node_chunk_value in node_chunk.items():
+                                print(f"{node_chunk_key}:\n{node_chunk_value}")
                 print("=" * 50)

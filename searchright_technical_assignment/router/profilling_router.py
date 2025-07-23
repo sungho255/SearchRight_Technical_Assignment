@@ -18,11 +18,12 @@ from langgraph.checkpoint.memory import MemorySaver
 from searchright_technical_assignment.state.profiling_state import ProfilingState
 
 # workflow
-from workflows.college import profilling_stategraph
+from searchright_technical_assignment.workflows.profiling_workflow import profilling_stategraph
 # etc
 from util.graph import visualize_graph
 from util.message import invoke_graph, random_uuid
 from util.extract_school_name import get_final_school_name
+from util.extract_titles import get_title
 # TechDTO
 from schema.talent_dto import TalentIn, TalentOut
 #########################################################################################
@@ -49,29 +50,33 @@ async def tech_langgraph(item: TalentIn):
 
         # 9. 지원자 정보 추출
         college = get_final_school_name(item.talent['educations'])
-        
+        skills = item.talent['skills']
+        titles = get_title(item.talent['positions'])
         
 
         # 10. State에 저장
-        inputs = ProfilingState(college=college)
+        inputs = ProfilingState(college=college,
+                                skills = skills,
+                                titles = titles,)
 
         # 11. 그래프 실행 출력
         invoke_graph(app, inputs, config)
  
         # 12. 최종 출력 확인 
-        outputs = app.get_state(config).values
+        outputs = app.get_state(config)
         
         return {
             "status": "success",  # 응답 상태
             "code": 200,  # HTTP 상태 코드
             "message": "Profile 생성 완료",  # 응답 메시지
-            'outout': {
-                outputs['college_level']: outputs['college']
-            }
+            'output': outputs.values['profile']
+            
         }
     except Exception as e:
             traceback.print_exc()
             return {
                 "status": "error",
-                "message": f"에러 발생: {str(e)}"
+                "code": 500,
+                "message": f"에러 발생: {str(e)}",
+                "output": {}
             }
