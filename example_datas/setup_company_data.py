@@ -26,7 +26,16 @@ DB_CONFIG = {
 
 
 def connect_to_db():
-    """데이터베이스에 연결"""
+    """
+    PostgreSQL 데이터베이스에 연결합니다.
+
+    Returns:
+        psycopg2.extensions.connection: 데이터베이스 연결 객체.
+
+    Raises:
+        psycopg2.Error: 데이터베이스 연결에 실패한 경우 발생합니다.
+    """
+    logger.info("데이터베이스 연결 시도...")
     try:
         conn = psycopg2.connect(
             host=DB_CONFIG["host"],
@@ -44,7 +53,16 @@ def connect_to_db():
 
 
 def create_company_table(conn):
-    """company 테이블 생성 (존재하지 않을 경우)"""
+    """
+    `company` 테이블을 생성합니다. 테이블이 이미 존재하는 경우 생성을 건너뜁니다.
+
+    Args:
+        conn (psycopg2.extensions.connection): 데이터베이스 연결 객체.
+
+    Raises:
+        psycopg2.Error: 테이블 생성에 실패한 경우 발생합니다.
+    """
+    logger.info("company 테이블 생성 확인...")
     try:
         with conn.cursor() as cursor:
             # 테이블이 존재하는지 확인
@@ -82,12 +100,23 @@ def create_company_table(conn):
 
 
 def load_company_data(file_path):
-    """회사 데이터 파일 불러오기"""
+    """
+    지정된 JSON 파일에서 회사 데이터를 로드합니다.
+    파일 이름에서 회사 이름을 추출합니다.
+
+    Args:
+        file_path (str): 회사 데이터 JSON 파일의 경로.
+
+    Returns:
+        tuple: (회사 이름, 회사 데이터) 튜플. 파일 로드 또는 파싱 실패 시 (None, None)을 반환합니다.
+    """
+    logger.info(f"회사 데이터 파일 로드 시도: {file_path}")
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
             # 파일 이름에서 회사 이름 추출 (예: company_ex1_비바리퍼블리카.json -> 비바리퍼블리카)
             company_name = os.path.basename(file_path).split("_")[-1].split(".")[0]
+            logger.info(f"회사 데이터 로드 성공: {company_name}")
             return company_name, data
     except (json.JSONDecodeError, FileNotFoundError) as e:
         logger.error(f"파일 로드 오류 ({file_path}): {e}")
@@ -95,7 +124,19 @@ def load_company_data(file_path):
 
 
 def insert_company_data(conn, name, data):
-    """회사 데이터를 데이터베이스에 삽입"""
+    """
+    회사 데이터를 데이터베이스의 `company` 테이블에 삽입합니다.
+    이미 존재하는 회사는 삽입을 건너뜁니다.
+
+    Args:
+        conn (psycopg2.extensions.connection): 데이터베이스 연결 객체.
+        name (str): 회사 이름.
+        data (dict): 회사 데이터 (JSONB 형식).
+
+    Returns:
+        bool: 데이터 삽입 성공 여부 (True: 성공, False: 실패 또는 건너뜀).
+    """
+    logger.info(f"회사 데이터 삽입 시도: {name}")
     try:
         with conn.cursor() as cursor:
             # 이미 존재하는지 확인
@@ -122,7 +163,12 @@ def insert_company_data(conn, name, data):
 
 
 def main():
-    """메인 함수"""
+    """
+    회사 데이터 설정 스크립트의 메인 함수입니다.
+    데이터베이스에 연결하고, `company` 테이블을 생성하며,
+    JSON 파일에서 회사 데이터를 로드하여 데이터베이스에 삽입합니다.
+    """
+    logger.info("setup_company_data 스크립트 시작.")
     try:
         # 데이터베이스 연결
         conn = connect_to_db()

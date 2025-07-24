@@ -1,24 +1,23 @@
-import json
 import logging
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
 
-def get_title(positions):
+def get_descriptions(positions):
     """
-    주어진 직책(positions) 리스트에서 직책 제목을 추출합니다.
+    주어진 직책(positions) 리스트에서 설명을 추출합니다.
 
     Args:
         positions (list): 직책 정보를 포함하는 딕셔너리 리스트.
 
     Returns:
-        list: 추출된 직책 제목 문자열 리스트.
+        list: 추출된 설명 문자열 리스트.
     """
-    logger.info("직책에서 제목을 추출하는 중입니다.")
-    # 제목 추출
-    titles = [position.get('title') for position in positions if position.get('title')]
-    logger.info(f"총 {len(titles)}개의 제목을 추출했습니다.")
-    return titles
+    logger.info("직책에서 설명을 추출하는 중입니다.")
+    # 설명 추출
+    descriptions = [position.get('description') for position in positions if position.get('description')]
+    logger.info(f"총 {len(descriptions)}개의 설명을 추출했습니다.")
+    return descriptions
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO) # 예시 실행 시 INFO 레벨 로깅 활성화
@@ -88,5 +87,5 @@ if __name__ == "__main__":
             "companyLocation": "대한민국 서울 강남구"
         }
     ]
-    extracted_data = get_title(positions)
-    logger.info(f"제목: {extracted_data}")
+    extracted_data = get_descriptions(positions)
+    logger.info(f"설명: {extracted_data}")

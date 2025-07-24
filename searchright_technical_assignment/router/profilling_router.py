@@ -1,70 +1,92 @@
 #########################################################################################
-# Basic
+# 기본 모듈 임포트
 import os
 import pandas as pd
 import traceback
-# Fastapi
-from fastapi import APIRouter, HTTPException, status, File, UploadFile
+import logging
+# FastAPI 관련 모듈 임포트
+from fastapi import APIRouter, status
 
-# LangChain
+# LangChain 관련 모듈 임포트
 from langchain_core.runnables import RunnableConfig
 
-# Graph
+# LangGraph 관련 모듈 임포트
 from langgraph.graph import END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 
-## Module
-# State
+## 사용자 정의 모듈 임포트
+# 상태 정의 모듈
 from searchright_technical_assignment.state.profiling_state import ProfilingState
 
-# workflow
+# 워크플로우 정의 모듈
 from searchright_technical_assignment.workflows.profiling_workflow import profilling_stategraph
-# etc
+# 기타 유틸리티 모듈
 from util.graph import visualize_graph
 from util.message import invoke_graph, random_uuid
 from util.extract_school_name import get_final_school_name
 from util.extract_titles import get_title
-# TechDTO
+from util.extract_companynames_and_dates import get_companynames_and_dates
+from util.extract_descriptions import get_descriptions
+# 데이터 전송 객체 (DTO) 모듈
 from schema.talent_dto import TalentIn, TalentOut
 #########################################################################################
+
+# 로깅 설정
+logger = logging.getLogger(__name__)
+
+# APIRouter 인스턴스 생성
 router = APIRouter()
 
-# 대학 수준 Prompt
+# 프로파일링 엔드포인트
 @router.post("/profilling", status_code = status.HTTP_200_OK, tags=['profilling'], response_model=TalentOut)
 async def tech_langgraph(item: TalentIn):
-    print('\n\033[36m[AI-API] \033[32m Profiling')
+    """
+    지원자 프로파일링을 수행하는 비동기 함수입니다.
+
+    Args:
+        item (TalentIn): 지원자의 학력, 기술, 경력 정보를 포함하는 입력 데이터.
+
+    Returns:
+        TalentOut: 프로파일링 결과 및 상태 정보를 포함하는 출력 데이터.
+    """
+    logger.info('\n\u001b[36m[AI-API] \u001b[32m 프로파일링 시작')
     try:
+        # 워크플로우 그래프 생성
         workflow = profilling_stategraph(StateGraph(ProfilingState))
 
-        # 5. 체크포인터 설정
+        # 체크포인터 설정
         memory = MemorySaver()
 
-        # 6. 그래프 컴파일
+        # 그래프 컴파일
         app = workflow.compile(checkpointer=memory)
 
-        # 7. 그래프 시각화
+        # 그래프 시각화
         visualize_graph(app,'tech_graph')
         
-        # 8. config 설정(재귀 최대 횟수, thread_id)
+        # config 설정 (재귀 최대 횟수, thread_id)
         config = RunnableConfig(recursion_limit=5, configurable={"thread_id": random_uuid()})
 
-        # 9. 지원자 정보 추출
-        college = get_final_school_name(item.talent['educations'])
-        skills = item.talent['skills']
-        titles = get_title(item.talent['positions'])
-        
+        # 지원자 정보 추출
+        college = get_final_school_name(item.educations or [])
+        skills = item.skills or []
+        titles = get_title(item.positions or [])
+        companynames_and_dates = get_companynames_and_dates(item.positions or [])
+        descriptions = get_descriptions(item.positions or [])
 
-        # 10. State에 저장
+        # State에 저장
         inputs = ProfilingState(college=college,
                                 skills = skills,
-                                titles = titles,)
+                                titles = titles,
+                                companynames_and_dates = companynames_and_dates,
+                                descriptions = descriptions)
 
-        # 11. 그래프 실행 출력
+        # 그래프 실행 및 출력
         invoke_graph(app, inputs, config)
- 
-        # 12. 최종 출력 확인 
+
+        # 최종 출력 확인 
         outputs = app.get_state(config)
         
+        logger.info("프로파일 생성 성공")
         return {
             "status": "success",  # 응답 상태
             "code": 200,  # HTTP 상태 코드
@@ -73,6 +95,7 @@ async def tech_langgraph(item: TalentIn):
             
         }
     except Exception as e:
+            logger.error(f"프로파일링 중 오류 발생: {e}")
             traceback.print_exc()
             return {
                 "status": "error",

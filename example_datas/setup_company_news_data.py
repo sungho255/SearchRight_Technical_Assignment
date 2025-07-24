@@ -26,7 +26,16 @@ DB_CONFIG = {
 
 
 def connect_to_db():
-    """데이터베이스에 연결"""
+    """
+    PostgreSQL 데이터베이스에 연결합니다.
+
+    Returns:
+        psycopg2.extensions.connection: 데이터베이스 연결 객체.
+
+    Raises:
+        psycopg2.Error: 데이터베이스 연결에 실패한 경우 발생합니다.
+    """
+    logger.info("데이터베이스 연결 시도...")
     try:
         conn = psycopg2.connect(
             host=DB_CONFIG["host"],
@@ -44,7 +53,16 @@ def connect_to_db():
 
 
 def create_company_news_table(conn):
-    """company_news 테이블 생성 (존재하지 않을 경우)"""
+    """
+    `company_news` 테이블을 생성합니다. 테이블이 이미 존재하는 경우 생성을 건너뜁니다.
+
+    Args:
+        conn (psycopg2.extensions.connection): 데이터베이스 연결 객체.
+
+    Raises:
+        psycopg2.Error: 테이블 생성에 실패한 경우 발생합니다.
+    """
+    logger.info("company_news 테이블 생성 확인...")
     try:
         with conn.cursor() as cursor:
             # 테이블이 존재하는지 확인
@@ -85,7 +103,16 @@ def create_company_news_table(conn):
 
 
 def load_news_data(file_path):
-    """뉴스 데이터 CSV 파일 불러오기"""
+    """
+    지정된 CSV 파일에서 뉴스 데이터를 로드합니다.
+
+    Args:
+        file_path (str): 뉴스 데이터 CSV 파일의 경로.
+
+    Returns:
+        list: 로드된 뉴스 데이터를 담은 딕셔너리 리스트.
+    """
+    logger.info(f"뉴스 데이터 CSV 파일 로드 시도: {file_path}")
     news_data = []
     try:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -118,7 +145,16 @@ def load_news_data(file_path):
 
 
 def get_company_map(conn):
-    """회사 이름을 ID로 매핑하는 딕셔너리 생성"""
+    """
+    `company` 테이블에서 회사 이름과 ID를 매핑하는 딕셔너리를 생성합니다.
+
+    Args:
+        conn (psycopg2.extensions.connection): 데이터베이스 연결 객체.
+
+    Returns:
+        dict: 회사 이름을 키로, 회사 ID를 값으로 하는 딕셔너리.
+    """
+    logger.info("회사 매핑 로드 시도...")
     try:
         company_map = {}
         with conn.cursor() as cursor:
@@ -134,7 +170,19 @@ def get_company_map(conn):
 
 
 def insert_news_data(conn, news_data, company_map):
-    """뉴스 데이터를 데이터베이스에 삽입"""
+    """
+    뉴스 데이터를 데이터베이스의 `company_news` 테이블에 삽입합니다.
+    이미 존재하는 뉴스 또는 회사 정보가 없는 뉴스는 건너뜁니다.
+
+    Args:
+        conn (psycopg2.extensions.connection): 데이터베이스 연결 객체.
+        news_data (list): 삽입할 뉴스 데이터를 담은 딕셔너리 리스트.
+        company_map (dict): 회사 이름과 ID 매핑 딕셔너리.
+
+    Returns:
+        int: 성공적으로 삽입된 뉴스 데이터의 개수.
+    """
+    logger.info("뉴스 데이터 삽입 시작...")
     try:
         inserted_count = 0
         skipped_count = 0
@@ -166,6 +214,7 @@ def insert_news_data(conn, news_data, company_map):
 
                 if count > 0:
                     skipped_count += 1
+                    logger.info(f"뉴스 '{news['title']}'가 이미 존재합니다. 건너뜁니다.")
                     continue
 
                 # 데이터 삽입
@@ -201,7 +250,12 @@ def insert_news_data(conn, news_data, company_map):
 
 
 def main():
-    """메인 함수"""
+    """
+    회사 뉴스 데이터 설정 스크립트의 메인 함수입니다.
+    데이터베이스에 연결하고, `company_news` 테이블을 생성하며,
+    CSV 파일에서 뉴스 데이터를 로드하여 데이터베이스에 삽입합니다.
+    """
+    logger.info("setup_company_news_data 스크립트 시작.")
     try:
         # 데이터베이스 연결
         conn = connect_to_db()
