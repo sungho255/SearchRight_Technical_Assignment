@@ -8,7 +8,6 @@
 *   **회사 뉴스 관리:** 의미론적 검색을 위한 임베딩 생성을 포함하여 회사 뉴스 기사 저장 및 검색.
 *   **프로파일링:** 회사 및 뉴스 데이터를 기반으로 프로필 생성.
 *   **벡터 검색:** 뉴스 임베딩에 대한 유사성 검색을 위해 `pgvector` 활용.
-*   **컨테이너화된 환경:** Docker를 사용한 쉬운 설정 및 배포.
 
 ## 사용 기술
 
@@ -17,9 +16,8 @@
 *   **의존성 관리:** Poetry
 *   **컨테이너화:** Docker, Docker Compose
 *   **웹 서버:** Nginx
-*   **AI/ML:** OpenAI (임베딩용), Langchain, LangGraph
-*   **데이터 처리:** Pandas, NumPy
-*   **웹 스크래핑:** `trafilatura`, `selenium`, `bs4`
+*   **AI/ML:** OpenAI, Langchain, LangGraph
+*   **웹 스크래핑:** `trafilatura`
 
 ## 설정 및 설치
 
