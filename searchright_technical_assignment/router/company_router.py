@@ -1,9 +1,9 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from crud.company_dao import CompanyDAO
-from schema.company import CompanySchema
-from db.conn import get_db
+from searchright_technical_assignment.crud.company_dao import CompanyDAO
+from searchright_technical_assignment.schema.company import CompanySchema
+from searchright_technical_assignment.db.conn import get_db
 
 # 로깅 설정
 logger = logging.getLogger(__name__)

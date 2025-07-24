@@ -12,12 +12,12 @@ from langchain_core.output_parsers import StrOutputParser
 
 
 # 사용자 정의 모듈 임포트
-from state.profiling_state import ProfilingState
-from retriever.pgvector import search_by_keyword
-from db.conn import get_db
-from crud.company_dao import CompanyDAO
-from model.company import Company
-from schema.response_dto import LeadershipResponse, CompanySizeResponse, ExperienceResponse
+from ..state.profiling_state import ProfilingState
+from ..retriever.pgvector import search_by_keyword
+from ..db.conn import get_db
+from ..crud.company_dao import CompanyDAO
+from ..model.company import Company
+from ..schema.response_dto import LeadershipResponse, CompanySizeResponse, ExperienceResponse
 
 # 경고 무시 설정
 import warnings

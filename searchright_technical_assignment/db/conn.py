@@ -17,7 +17,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
     logger.error("환경 변수에 DATABASE_URL이 설정되어 있지 않습니다.")
     raise ValueError("환경 변수에서 DATABASE_URL을 찾을 수 없습니다.")
-
+ 
 # SQLAlchemy 엔진 생성
 engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
 # 세션 로컬 클래스 생성

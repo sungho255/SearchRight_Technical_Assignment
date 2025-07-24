@@ -21,14 +21,14 @@ from searchright_technical_assignment.state.profiling_state import ProfilingStat
 # 워크플로우 정의 모듈
 from searchright_technical_assignment.workflows.profiling_workflow import profilling_stategraph
 # 기타 유틸리티 모듈
-from util.graph import visualize_graph
-from util.message import invoke_graph, random_uuid
-from util.extract_school_name import get_final_school_name
-from util.extract_titles import get_title
-from util.extract_companynames_and_dates import get_companynames_and_dates
-from util.extract_descriptions import get_descriptions
+from searchright_technical_assignment.util.graph import visualize_graph
+from searchright_technical_assignment.util.message import invoke_graph, random_uuid
+from searchright_technical_assignment.util.extract_school_name import get_final_school_name
+from searchright_technical_assignment.util.extract_titles import get_title
+from searchright_technical_assignment.util.extract_companynames_and_dates import get_companynames_and_dates
+from searchright_technical_assignment.util.extract_descriptions import get_descriptions
 # 데이터 전송 객체 (DTO) 모듈
-from schema.talent_dto import TalentIn, TalentOut
+from searchright_technical_assignment.schema.talent_dto import TalentIn, TalentOut
 #########################################################################################
 
 # 로깅 설정

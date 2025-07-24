@@ -31,7 +31,7 @@ def insert_company_data(db: Session):
 
         for file_path in sorted(company_files):
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, "r", encoding='cp949') as f:
                     company_data = json.load(f)
                 
                 # 파일 이름에서 회사 이름 추출 (예: company_ex1_비바리퍼블리카.json -> 비바리퍼블리카)

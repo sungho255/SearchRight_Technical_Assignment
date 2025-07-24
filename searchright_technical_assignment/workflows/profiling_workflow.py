@@ -2,9 +2,9 @@ import logging
 # 그래프 관련 모듈 임포트
 from langgraph.graph import END, StateGraph
 # 노드 관련 모듈 임포트
-from node.profiling_node import input, college_level, leadership, combine, company_size, experience
+from ..node.profiling_node import input, college_level, leadership, combine, company_size, experience
 # 프롬프트 관련 모듈 임포트
-from prompt.profiling_prompt import college_prompt, leadership_prompt, company_size_prompt, experience_prompt
+from ..prompt.profiling_prompt import college_prompt, leadership_prompt, company_size_prompt, experience_prompt
 
 # 로깅 설정
 logger = logging.getLogger(__name__)

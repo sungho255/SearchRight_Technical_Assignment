@@ -106,14 +106,14 @@ def insert_embeddings_to_pgvector(news_items):
         logger.error(f"PGVector에 임베딩 삽입 중 오류 발생: {e}")
 
 
-if __name__ == "__main__":
+def run_insert_company_news_embeddings():
     logger.info("PGVector 임베딩 삽입 스크립트 시작.")
-    # PGVector 테이블이 없으면 자동으로 생성됩니다.
-    # Base.metadata.create_all(engine) # PGVector는 자체적으로 테이블을 관리하므로 필요 없음
-
     news_data = get_company_news_from_db()
     if news_data:
         insert_embeddings_to_pgvector(news_data)
     else:
         logger.warning("PGVector에 삽입할 뉴스 데이터가 없습니다. company_news 테이블을 확인하세요.")
     logger.info("PGVector 임베딩 삽입 스크립트 종료.")
+
+if __name__ == "__main__":
+    run_insert_company_news_embeddings()

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 # 데이터베이스 관련 모듈 (현재 사용되지 않음)
 
 # 라우터 모듈 임포트
-from router import company_router, companynews_router, profilling_router
+from searchright_technical_assignment.router import company_router, companynews_router, profilling_router
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
