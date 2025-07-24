@@ -28,7 +28,6 @@
 *   Poetry
 
 ### 단계
-
 1.  **저장소 복제:**
     ```bash
     git clone https://github.com/your-repo/searchright-technical-assignment.git
@@ -114,3 +113,28 @@ API 문서 (Swagger UI)는 `http://localhost:8000/docs`에서 사용할 수 있�
 │           # - combine: 다양한 노드에서 생성된 프로파일링 정보를 결합하여 최종 프로파일을 생성합니다.
 └── tests/                     # 단위 및 통합 테스트
 ```
+
+## LangGraph 워크플로우
+
+`profiling_workflow.py`에 정의된 LangGraph 워크플로우는 다음과 같은 흐름을 가집니다:
+
+```mermaid
+graph TD
+    A[input] --> B(college_level)
+    A --> C(leadership)
+    A --> D(company_size)
+    A --> E(experience)
+    B --> F(combine)
+    C --> F
+    D --> F
+    E --> F
+    F --> G[END]
+```
+
+**노드 설명:**
+*   `input`: 워크플로우의 시작 노드로, 초기 상태를 다음 노드로 전달합니다.
+*   `college_level`: 지원자의 학력 정보를 기반으로 대학 수준을 판단합니다.
+*   `leadership`: 지원자의 기술 및 직책 정보를 기반으로 리더십 유무를 판단합니다.
+*   `company_size`: 지원자의 경력 회사 정보를 기반으로 회사 규모(스타트업/대기업)를 판단합니다.
+*   `experience`: 지원자의 경력 설명을 기반으로 경험을 판단합니다.
+*   `combine`: 다양한 노드에서 생성된 프로파일링 정보를 결합하여 최종 프로파일을 생성합니다.
