@@ -3,8 +3,7 @@ from searchright_technical_assignment.db.conn import engine, Base, SessionLocal
 from searchright_technical_assignment.model.company import Company # Company 모델 임포트
 from searchright_technical_assignment.model.companynews import CompanyNews # CompanyNews 모델 임포트
 from searchright_technical_assignment.db.insert_company_data import insert_company_data
-from searchright_technical_assignment.db.insert_company_news_data import insert_company_news_data
-from searchright_technical_assignment.db.insert_company_news_embeddings import run_insert_company_news_embeddings
+from searchright_technical_assignment.db.insert_company_news_vector import insert_company_news_and_vectors
 import asyncio # asyncio 모듈 임포트
 from sqlalchemy import text # text 임포트 추가
 
@@ -38,12 +37,10 @@ async def main_async():
     create_all_tables()
 
     # 2. 초기 데이터 삽입 (선택 사항, 필요 시 주석 해제 및 데이터 전달)
-    # insert_company_data()
-    # await insert_company_news_data()
     db = SessionLocal()
     try:
         insert_company_data(db)
-        await insert_company_news_data(db)
+        await insert_company_news_and_vectors(db)
     finally:
         db.close()
 

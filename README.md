@@ -51,7 +51,6 @@
 5.  **데이터베이스 테이블 설정:**
     ```bash
     python -m searchright_technical_assignment.db.setup_tables
-    python -m searchright_technical_assignment.db.insert_company_news_embeddings
     ```
 
 6.  **FastAPI 애플리케이션 실행:**
