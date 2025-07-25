@@ -139,6 +139,41 @@ graph TD
 *   `experience`: 지원자의 경력 설명을 기반으로 경험을 판단합니다.
 *   `combine`: 다양한 노드에서 생성된 프로파일링 정보를 결합하여 최종 프로파일을 생성합니다.
 
+**노드 별 사용 데이터**
+
+1. 대학교 수준 분별
+    - 지원자 데이터
+        
+        - educations의 `schoolName`
+
+2. 회사 경험  (성장기스타트업 (근무 기간 동안 성장 규모), 대규모 회사)
+    - 지원자 데이터
+        
+        - positions의 `companyName`
+
+    - 회사 데이터
+        
+        - `investment`: 투자 유치 시기 및 금액 → 스타트업 여부 파악
+        - `organiztion`: 재직자 수 → 규모 확인
+  
+3. 리더쉽 유무
+    - 지원자 데이터
+  
+        - positions의 `title`
+        - positions의 `skills`
+  
+    - 회사 뉴스 데이터
+  
+        - conpany_news의 `content` (회사정보 부족 시 근무시기의 뉴스데이터 적용)
+  
+4. 경험
+    - 지원자 정보
+  
+        - positions의 `description`
+  
+    - 회사 데이터
+  
+        - `products`: 어떤 제품/서비스를 운영했는지 → 어떤 도메인에서 일했는지 추론
 
 ## 어려웠던 점
 **크롤링** 
