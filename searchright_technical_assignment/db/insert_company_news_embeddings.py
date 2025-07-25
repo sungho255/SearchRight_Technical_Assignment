@@ -21,6 +21,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# httpx 로거의 레벨을 경고로 설정하여 HTTP 요청 로그를 억제합니다.
+logging.getLogger('httpx').setLevel(logging.WARNING)
+
 # 데이터베이스 설정
 DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
@@ -43,8 +46,7 @@ class CompanyNews(Base):
     title = Column(String)
     original_link = Column(Text)
     news_date = Column(Date)
-    # content 컬럼이 있다면 추가 (현재 CSV에는 없으므로 주석 처리)
-    # content = Column(Text)
+    content = Column(Text)
 
 def get_db():
     db = SessionLocal()
@@ -53,9 +55,8 @@ def get_db():
     finally:
         db.close()
 
-def get_company_news_from_db():
+def get_company_news_from_db(db):
     """데이터베이스에서 company_news 데이터를 가져옵니다."""
-    db = SessionLocal()
     try:
         # content 컬럼이 없으므로 title만 사용
         news_items = db.query(CompanyNews.title, CompanyNews.news_date, CompanyNews.company_id).all()
@@ -64,11 +65,9 @@ def get_company_news_from_db():
     except Exception as e:
         logger.error(f"뉴스 데이터를 데이터베이스에서 가져오는 중 오류 발생: {e}")
         return []
-    finally:
-        db.close()
 
 def insert_embeddings_to_pgvector(news_items):
-    """뉴스 데이터를 임베딩하여 PGVector에 저장합니다."""
+    """뉴스 데이터를 PGVector에 저장합니다."""
     documents = []
     for news in news_items:
         # PGVector에 저장할 Document 객체 생성
@@ -106,9 +105,9 @@ def insert_embeddings_to_pgvector(news_items):
         logger.error(f"PGVector에 임베딩 삽입 중 오류 발생: {e}")
 
 
-def run_insert_company_news_embeddings():
+def run_insert_company_news_embeddings(db):
     logger.info("PGVector 임베딩 삽입 스크립트 시작.")
-    news_data = get_company_news_from_db()
+    news_data = get_company_news_from_db(db)
     if news_data:
         insert_embeddings_to_pgvector(news_data)
     else:
@@ -116,4 +115,5 @@ def run_insert_company_news_embeddings():
     logger.info("PGVector 임베딩 삽입 스크립트 종료.")
 
 if __name__ == "__main__":
-    run_insert_company_news_embeddings()
+    with SessionLocal() as db:
+        run_insert_company_news_embeddings(db)

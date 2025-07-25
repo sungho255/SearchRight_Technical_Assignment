@@ -6,6 +6,8 @@ from datetime import date
 import asyncio # asyncio 모듈 임포트
 import traceback # traceback 모듈 임포트
 import logging
+from tqdm.asyncio import tqdm as async_tqdm # tqdm 임포트
+from tqdm import tqdm # tqdm 임포트
 
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
@@ -17,6 +19,9 @@ from ..util.embedding import generate_embedding
 # 로깅 설정
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+# httpx 로거의 레벨을 경고로 설정하여 HTTP 요청 로그를 억제합니다.
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 async def insert_company_news_data(db: Session): 
     """
@@ -31,15 +36,15 @@ async def insert_company_news_data(db: Session):
         
         logger.info(f"CSV 파일 읽기 완료. 총 {len(df)}개 뉴스 항목.")
         
-        
         logger.info("회사 정보 매핑 로드...")
         company_map = {c.name: c.id for c in db.query(Company).all()}
         
         logger.info(f"{len(company_map)}개의 회사 정보 로드 완료.")
-
         logger.info("임베딩 생성 시작...")
+        
         # 모든 뉴스 제목을 수집하여 배치 임베딩을 준비합니다.
         combined_embed = df['chunked_content'].tolist()
+        
         # 비동기 임베딩 함수를 await 키워드로 호출합니다.
         all_combined_embeddings = await generate_embedding(combined_embed)
         logger.info("임베딩 생성 완료.")
@@ -47,12 +52,12 @@ async def insert_company_news_data(db: Session):
         # example_datas 디렉토리 경로 설정
         example_datas_dir = os.path.join(script_dir, '..', '..', 'example_datas')
 
-        logger.info("4. 데이터베이스 삽입 시작...")
+        logger.info("데이터베이스 삽입 시작...")
         inserted_count = 0
         skipped_count = 0
         missing_company_count = 0
 
-        for index, row in df.iterrows():
+        for index, row in tqdm(df.iterrows(), total=len(df), desc="데이터베이스 삽입 중"):
             company_name = row['name']
             
             company_id = company_map.get(company_name)

@@ -47,7 +47,7 @@ def chunk_and_save_csv():
 
     # 3. 텍스트를 청크로 분할
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
+        chunk_size=200,
         chunk_overlap=50,  # 컨텍스트 보존을 위해 약간의 겹침 추가
         length_function=len,
     )

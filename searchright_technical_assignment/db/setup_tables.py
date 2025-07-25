@@ -1,7 +1,7 @@
 import logging
 from searchright_technical_assignment.db.conn import engine, Base, SessionLocal
-# from searchright_technical_assignment.model.company import Company # Company 모델 임포트
-# from searchright_technical_assignment.model.companynews import CompanyNews # CompanyNews 모델 임포트
+from searchright_technical_assignment.model.company import Company # Company 모델 임포트
+from searchright_technical_assignment.model.companynews import CompanyNews # CompanyNews 모델 임포트
 from searchright_technical_assignment.db.insert_company_data import insert_company_data
 from searchright_technical_assignment.db.insert_company_news_data import insert_company_news_data
 from searchright_technical_assignment.db.insert_company_news_embeddings import run_insert_company_news_embeddings
@@ -23,10 +23,6 @@ def create_all_tables():
     """
     logger.info("모든 테이블을 생성합니다...")
     try:
-        # with engine.connect() as connection:
-        #     connection.execute(text("CREATE SCHEMA IF NOT EXISTS company_news_collection"))
-        #     connection.commit()
-        # Base.metadata.create_all(engine)
         Base.metadata.create_all(engine)
         
         logger.info("모든 테이블이 성공적으로 생성되었습니다.")
@@ -39,16 +35,17 @@ async def main_async():
     테이블 생성 및 초기 데이터 삽입을 위한 비동기 메인 함수입니다.
     """
     # 1. 테이블 생성
-    # create_all_tables()
-    Base.metadata.create_all(engine)
-    # # 2. 초기 데이터 삽입 (선택 사항, 필요 시 주석 해제 및 데이터 전달)
-    # db = SessionLocal()
-    # try:
-    #     insert_company_data(db)
-    #     await insert_company_news_data(db)
-    #     # await run_insert_company_news_embeddings()
-    # finally:
-    #     db.close()
+    create_all_tables()
+
+    # 2. 초기 데이터 삽입 (선택 사항, 필요 시 주석 해제 및 데이터 전달)
+    # insert_company_data()
+    # await insert_company_news_data()
+    db = SessionLocal()
+    try:
+        insert_company_data(db)
+        await insert_company_news_data(db)
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import logging
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from typing import List, Dict
+from tqdm.asyncio import tqdm
 
 
 # 로깅 설정
@@ -16,7 +17,7 @@ load_dotenv()
 embedding_cache: Dict[str, List[float]] = {}
 
 # 배치 사이즈 설정 (조절 가능)
-BATCH_SIZE = 32 # 예시 값, 실제 환경에서 최적화 필요
+BATCH_SIZE = 100 # 예시 값, 실제 환경에서 최적화 필요
 
 async def generate_embedding(texts: List[str]) -> List[List[float]]:
     """
@@ -51,7 +52,7 @@ async def generate_embedding(texts: List[str]) -> List[List[float]]:
     logger.info(f"총 {len(texts_to_embed)}개의 텍스트를 임베딩합니다. 배치 사이즈: {BATCH_SIZE}")
 
     # tqdm을 사용하여 배치 처리 루프에 진행률 표시줄을 추가합니다.
-    for batch_num, i in enumerate(range(0, len(texts_to_embed), BATCH_SIZE)):
+    for batch_num, i in enumerate(tqdm(range(0, len(texts_to_embed), BATCH_SIZE), desc="임베딩 배치 처리 중")):
         batch_texts = texts_to_embed[i:i + BATCH_SIZE]
         batch_indices = indices_to_embed[i:i + BATCH_SIZE]
         
