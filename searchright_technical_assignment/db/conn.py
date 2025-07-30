@@ -26,16 +26,8 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 # 선언적 기본 클래스 생성
 Base = declarative_base()
 
-# 의존성 주입을 위한 데이터베이스 세션 컨텍스트 관리자
-@contextmanager
+# 의존성 주입을 위한 데이터베이스 세션
 def get_db():
-    """
-    데이터베이스 세션을 제공하는 컨텍스트 관리자입니다.
-    세션은 사용 후 자동으로 닫힙니다.
-
-    Yields:
-        Session: SQLAlchemy 데이터베이스 세션.
-    """
     db = SessionLocal()
     logger.info("데이터베이스 세션이 시작되었습니다.")
     try:

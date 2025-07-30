@@ -33,6 +33,11 @@ async def main_async():
     """
     테이블 생성 및 초기 데이터 삽입을 위한 비동기 메인 함수입니다.
     """
+    # pgvector 확장 활성화
+    with engine.connect() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        connection.commit()
+    print("pgvector 확장이 성공적으로 활성화되었습니다.")
     # 1. 테이블 생성
     create_all_tables()
 
@@ -47,4 +52,4 @@ async def main_async():
 
 if __name__ == "__main__":
     # 스크립트가 직접 실행될 때 비동기 메인 함수를 실행합니다.
-    asyncio.run(main_async())
+    asyncio.run(main_async()) 
