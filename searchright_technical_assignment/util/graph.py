@@ -44,7 +44,7 @@ def visualize_graph(graph, file_name, xray=False):
         Exception: 그래프 시각화 과정에서 오류가 발생한 경우 예외를 출력합니다.
     """
     try:
-        file_path = f'./image/{file_name}.png'
+        file_path = f'./searchright_technical_assignment/image/{file_name}.png'
         logger.info(f"그래프를 {file_path}로 시각화하는 중입니다.")
         # 그래프 시각화
         if isinstance(graph, CompiledStateGraph):
