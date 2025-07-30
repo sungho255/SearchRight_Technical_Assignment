@@ -130,7 +130,8 @@ def company_size(state: ProfilingState, prompt: PromptTemplate):
     # 상태 변수에서 회사 이름 및 근무 기간 정보 추출
     companynames_and_dates = state['companynames_and_dates']
     
-    with get_db() as db_session:
+    db_session = next(get_db())
+    try:
         company_dao = CompanyDAO(db_session)
         matched_companies_results = company_dao.get_data_by_names(companynames_and_dates)
         
@@ -200,6 +201,8 @@ def company_size(state: ProfilingState, prompt: PromptTemplate):
         logger.info(f"판단된 회사 규모: {answer.company_size_and_reason}")
     
         return {'company_size_and_reason':answer.company_size_and_reason}
+    finally:
+        db_session.close()
     
 
 # 4. 지원자 경험 판단 노드
@@ -220,7 +223,8 @@ def experience(state: ProfilingState, prompt: PromptTemplate):
     descriptions = state['descriptions']
     companynames_and_dates = state['companynames_and_dates']
     
-    with get_db() as db_session:
+    db_session = next(get_db())
+    try:
         company_dao = CompanyDAO(db_session)
         matched_companies_results = company_dao.get_data_by_names(companynames_and_dates)
         
@@ -251,6 +255,8 @@ def experience(state: ProfilingState, prompt: PromptTemplate):
         logger.info(f"판단된 경험: {answer.experience_and_reason}")
         
         return {'experience_and_reason':answer.experience_and_reason}
+    finally:
+        db_session.close()
 
 
     
