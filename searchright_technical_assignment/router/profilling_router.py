@@ -49,7 +49,7 @@ async def tech_langgraph(item: TalentIn):
     Returns:
         TalentOut: 프로파일링 결과 및 상태 정보를 포함하는 출력 데이터.
     """
-    logger.info('\n\u001b[36m[AI-API] \u001b[32m 프로파일링 시작')
+    logger.info('\n\u001b[36m[AI-API] \u001b[32m 프로파일링 시작\u001b[0m')
     try:
         # 워크플로우 그래프 생성
         workflow = profilling_stategraph(StateGraph(ProfilingState))
@@ -80,26 +80,24 @@ async def tech_langgraph(item: TalentIn):
                                 companynames_and_dates = companynames_and_dates,
                                 descriptions = descriptions)
 
-        # 그래프 실행 및 출력
-        invoke_graph(app, inputs, config)
-
-        # 최종 출력 확인 
-        outputs = app.get_state(config)
+        # 그래프 실행 및 최종 상태 확인
+        outputs = await app.ainvoke(inputs, config)
         
         logger.info("프로파일 생성 성공")
-        return {
-            "status": "success",  # 응답 상태
-            "code": 200,  # HTTP 상태 코드
-            "message": "Profile 생성 완료",  # 응답 메시지
-            'output': outputs.values['profile']
-            
-        }
+        return TalentOut(
+            status="success",  # 응답 상태
+            code=200,  # HTTP 상태 코드
+            message="Profile 생성 완료",  # 응답 메시지
+            output=outputs['profile'],
+            node_timings={}
+        )
     except Exception as e:
             logger.error(f"프로파일링 중 오류 발생: {e}")
             traceback.print_exc()
-            return {
-                "status": "error",
-                "code": 500,
-                "message": f"에러 발생: {str(e)}",
-                "output": {}
-            }
+            return TalentOut(
+                status="error",
+                code=500,
+                message=f"에러 발생: {str(e)}",
+                output={},
+                node_timings={}
+            )

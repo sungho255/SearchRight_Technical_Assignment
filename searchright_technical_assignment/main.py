@@ -13,10 +13,25 @@ from pydantic import BaseModel
 
 # 라우터 모듈 임포트
 from searchright_technical_assignment.router import company_router, companynews_router, profilling_router
+from searchright_technical_assignment.util.colored_formatter import ColoredFormatter
 
 # 로깅 설정
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# 기본 로거를 가져옵니다.
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# 모든 기존 핸들러를 제거합니다.
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
+
+# 새로운 스트림 핸들러를 생성하고 커스텀 포매터를 적용합니다.
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+formatter = ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+
+# 로거에 새로운 핸들러를 추가합니다.
+logger.addHandler(ch)
 
 
 # 현재 파일의 기본 디렉토리 설정 및 .env 파일 로드

@@ -1,4 +1,5 @@
 import logging
+import functools
 # 그래프 관련 모듈 임포트
 from langgraph.graph import END, StateGraph
 # 노드 관련 모듈 임포트
@@ -22,10 +23,10 @@ def profilling_stategraph(workflow: StateGraph):
     logger.info("프로파일링 상태 그래프 설정 시작.")
     # 1. 노드 추가
     workflow.add_node("input", input)
-    workflow.add_node("college_level", lambda state: college_level(state, prompt=college_prompt))
-    workflow.add_node("leadership", lambda state: leadership(state, prompt=leadership_prompt))
-    workflow.add_node("company_size", lambda state: company_size(state, prompt=company_size_prompt))
-    workflow.add_node("experience", lambda state: experience(state, prompt=experience_prompt))
+    workflow.add_node("college_level", functools.partial(college_level, prompt=college_prompt))
+    workflow.add_node("leadership", functools.partial(leadership, prompt=leadership_prompt))
+    workflow.add_node("company_size", functools.partial(company_size, prompt=company_size_prompt))
+    workflow.add_node("experience", functools.partial(experience, prompt=experience_prompt))
     workflow.add_node("combine", combine)
     logger.info("그래프에 노드 추가 완료.")
     

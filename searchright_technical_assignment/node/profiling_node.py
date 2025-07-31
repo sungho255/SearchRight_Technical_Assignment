@@ -1,9 +1,11 @@
 ################################################## 라이브러리 #########################################################
 # 기본 모듈 임포트
 import os
+import time
 import openai
 import logging
 from dotenv import load_dotenv
+import asyncio
 
 # LangChain 체인 관련 모듈 임포트
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -50,7 +52,7 @@ def input(state: ProfilingState):
     return state
     
 # 1. 대학 수준 분별 노드
-def college_level(state: ProfilingState, prompt: PromptTemplate):
+async def college_level(state: ProfilingState, prompt: PromptTemplate):
     """
     지원자의 학력 정보를 기반으로 대학 수준을 판단하는 노드입니다.
 
@@ -61,6 +63,9 @@ def college_level(state: ProfilingState, prompt: PromptTemplate):
     Returns:
         dict: 'college_level' 키에 판단된 대학 수준을 포함하는 딕셔너리.
     """
+    start_time = time.time()
+    logger.info("==> (1/4) college_level 노드 시작")
+    
     logger.info("대학 수준 노드 실행 중.")
     # 상태 변수에서 대학 정보 추출
     college = state['college']
@@ -72,14 +77,17 @@ def college_level(state: ProfilingState, prompt: PromptTemplate):
     chain = prompt | model | StrOutputParser()
 
     # 3. 대학 수준 생성 LLM 실행
-    answer = chain.invoke({'college' : college})
+    answer = await chain.ainvoke({'college' : college})
     logger.info(f"판단된 대학 수준: {answer}")
+    
+    end_time = time.time()
+    logger.info(f"<== (1/4) college_level 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")
     
     return {'college_level':answer}
 
 
 # 2. 리더십 유무 판단 노드
-def leadership(state: ProfilingState, prompt: PromptTemplate):
+async def leadership(state: ProfilingState, prompt: PromptTemplate):
     """
     지원자의 기술 및 직책 정보를 기반으로 리더십 유무를 판단하는 노드입니다.
 
@@ -90,6 +98,9 @@ def leadership(state: ProfilingState, prompt: PromptTemplate):
     Returns:
         dict: 'leadership' (리더십 유무) 및 'leadership_reason' (근거)를 포함하는 딕셔너리.
     """
+    start_time = time.time() 
+    logger.info("==> (2/4) leadership 노드 시작")
+    
     logger.info("리더십 노드 실행 중.")
     # 상태 변수에서 기술 및 직책 정보 추출
     skills = state['skills']
@@ -105,8 +116,11 @@ def leadership(state: ProfilingState, prompt: PromptTemplate):
     chain = prompt | llm_with_tool
 
     # 3. 리더십 판단 LLM 실행
-    answer = chain.invoke({'skills' : skills, 'titles': titles})
+    answer = await chain.ainvoke({'skills' : skills, 'titles': titles})
     logger.info(f"판단된 리더십: {answer.leadership}")
+    
+    end_time = time.time()
+    logger.info(f"<== (2/4) leadership 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")
     
     return {
         'leadership': answer.leadership,
@@ -114,7 +128,7 @@ def leadership(state: ProfilingState, prompt: PromptTemplate):
     }
     
 # 3. 스타트업 기업 혹은 대기업 경험 판단 노드
-def company_size(state: ProfilingState, prompt: PromptTemplate):
+async def company_size(state: ProfilingState, prompt: PromptTemplate):
     """
     지원자의 경력 회사 정보를 기반으로 회사 규모 (스타트업/대기업)를 판단하는 노드입니다.
     데이터베이스에서 회사 정보를 조회하고, 필요한 경우 뉴스 검색을 통해 추가 정보를 얻습니다.
@@ -126,87 +140,94 @@ def company_size(state: ProfilingState, prompt: PromptTemplate):
     Returns:
         dict: 'company_size_and_reason' (회사 규모 및 근거)를 포함하는 딕셔너리.
     """
+    start_time = time.time()
+    logger.info("==> (3/4) company_size 노드 시작")
     logger.info("회사 규모 노드 실행 중.")
+    
     # 상태 변수에서 회사 이름 및 근무 기간 정보 추출
     companynames_and_dates = state['companynames_and_dates']
     
-    db_session = next(get_db())
-    try:
-        company_dao = CompanyDAO(db_session)
-        matched_companies_results = company_dao.get_data_by_names(companynames_and_dates)
-        
-        # 각 회사별로 정보를 묶어서 리스트로 반환합니다.
-        grouped_company_data = []
-        for company_name, company_data in matched_companies_results:
-            mae = None
-            investment = None
-            organization = None
-            if isinstance(company_data, dict):
-                mae = company_data.get('mae')
-                investment = company_data.get('investment')
-                organization = company_data.get('organization')
+    async with get_db() as db_session:
+        try:
+            company_dao = CompanyDAO(db_session)
+            matched_companies_results = await company_dao.get_data_by_names(companynames_and_dates)
             
-            grouped_company_data.append({
-                "name": company_name,
-                "mae": mae,
-                "investment": investment,
-                "organization": organization
-            })
+            # 각 회사별로 정보를 묶어서 리스트로 반환합니다.
+            grouped_company_data = []
+            for company_name, company_data in matched_companies_results:
+                mae = None
+                investment = None
+                organization = None
+                if isinstance(company_data, dict):
+                    mae = company_data.get('mae')
+                    investment = company_data.get('investment')
+                    organization = company_data.get('organization')
+                
+                grouped_company_data.append({
+                    "name": company_name,
+                    "mae": mae,
+                    "investment": investment,
+                    "organization": organization
+                })
 
-        # companynames_and_dates에 없는 기업명 추출
-        companynames_and_dates_set = {item['companyName'] for item in companynames_and_dates if 'companyName' in item}
-        grouped_company_data_names_set = {company_info['name'] for company_info in grouped_company_data}
+            # companynames_and_dates에 없는 기업명 추출
+            companynames_and_dates_set = {item['companyName'] for item in companynames_and_dates if 'companyName' in item}
+            grouped_company_data_names_set = {company_info['name'] for company_info in grouped_company_data}
 
-        # 회사 이력에는 있지만 DB에 상세 정보가 없는 기업명 리스트
-        companies_missing_db_info = list(companynames_and_dates_set - grouped_company_data_names_set)
+            # 회사 이력에는 있지만 DB에 상세 정보가 없는 기업명 리스트
+            companies_missing_db_info = list(companynames_and_dates_set - grouped_company_data_names_set)
 
-        # companies_missing_db_info에 있는 기업명에 대해 PGVector 검색 수행
-        company_news_contents = {}
-        for company_name in companies_missing_db_info:
-            # companynames_and_dates에서 해당 기업의 근무 기간 찾기
-            start_end_dates_for_company = []
-            for item in companynames_and_dates:
-                if item.get('companyName') == company_name:
-                    start_end_dates_for_company = item.get('startEndDates', [])
-                    break
+            # companies_missing_db_info에 있는 기업명에 대해 PGVector 검색 수행
+            company_news_contents = {}
+            tasks = []
+            for company_name in companies_missing_db_info:
+                start_end_dates_for_company = []
+                for item in companynames_and_dates:
+                    if item.get('companyName') == company_name:
+                        start_end_dates_for_company = item.get('startEndDates', [])
+                        break
+                
+                for date_range in start_end_dates_for_company:
+                    start_date = date_range.get('start')
+                    end_date = date_range.get('end')
+                    key_word = f"{company_name}의 투자 규모, 조직 규모"
+                    tasks.append(search_by_keyword(key_word, k=5, start_date_obj=start_date, end_date_obj=end_date))
             
-            # 각 근무 기간에 대해 뉴스 검색
-            for date_range in start_end_dates_for_company:
-                start_date = date_range.get('start')
-                end_date = date_range.get('end')
-                
-                key_word = f"{company_name}의 투자 규모, 조직 규모"
-                
-                # search_by_keyword 함수 호출
-                relevant_docs = search_by_keyword(key_word, k=5, start_date_obj=start_date, end_date_obj=end_date)
+            # 모든 PGVector 검색을 병렬로 실행
+            all_relevant_docs = await asyncio.gather(*tasks)
 
+            # 결과를 company_news_contents에 취합
+            for i, company_name in enumerate(companies_missing_db_info):
                 if company_name not in company_news_contents:
                     company_news_contents[company_name] = []
-                for doc in relevant_docs:
-                    company_news_contents[company_name].append(doc.page_content)
-        
+                # 각 태스크의 결과는 리스트이므로, 이를 확장하여 추가
+                company_news_contents[company_name].extend(all_relevant_docs[i])
+            
 
-        # 1. 모델 선언 (GPT-4o 사용)
-        model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
-        
-        # 2. 구조화된 출력을 위한 LLM 설정 (CompanySizeResponse DTO 사용)
-        llm_with_tool = model.with_structured_output(CompanySizeResponse)
-        
-        # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
-        chain = prompt | llm_with_tool
+            # 1. 모델 선언 (GPT-4o 사용)
+            model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+            
+            # 2. 구조화된 출력을 위한 LLM 설정 (CompanySizeResponse DTO 사용)
+            llm_with_tool = model.with_structured_output(CompanySizeResponse)
+            
+            # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
+            chain = prompt | llm_with_tool
 
-    
-        # 4. 기업 경험 LLM 실행
-        answer = chain.invoke({'companynames_and_dates' : companynames_and_dates, 'grouped_company_data' : grouped_company_data, 'company_news_contents': company_news_contents})
-        logger.info(f"판단된 회사 규모: {answer.company_size_and_reason}")
-    
-        return {'company_size_and_reason':answer.company_size_and_reason}
-    finally:
-        db_session.close()
+        
+            # 4. 기업 경험 LLM 실행
+            answer = await chain.ainvoke({'companynames_and_dates' : companynames_and_dates, 'grouped_company_data' : grouped_company_data, 'company_news_contents': company_news_contents})
+            logger.info(f"판단된 회사 규모: {answer.company_size_and_reason}")
+        
+            end_time = time.time()
+            logger.info(f"<== (3/4) company_size 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")   
+        
+            return {'company_size_and_reason':answer.company_size_and_reason}
+        finally:
+            await db_session.close()
     
 
 # 4. 지원자 경험 판단 노드
-def experience(state: ProfilingState, prompt: PromptTemplate):
+async def experience(state: ProfilingState, prompt: PromptTemplate):
     """
     지원자의 경력 설명을 기반으로 경험을 판단하는 노드입니다.
     데이터베이스에서 회사 제품 정보를 조회하여 판단에 활용합니다.
@@ -218,45 +239,50 @@ def experience(state: ProfilingState, prompt: PromptTemplate):
     Returns:
         dict: 'experience_and_reason' (경험 및 근거)를 포함하는 딕셔너리.
     """
+    start_time = time.time()
+    logger.info("==> (4/4) experience 노드 시작")
+    
     logger.info("경험 노드 실행 중.")
     # 상태 변수에서 설명 및 회사 이름/근무 기간 정보 추출
     descriptions = state['descriptions']
     companynames_and_dates = state['companynames_and_dates']
     
-    db_session = next(get_db())
-    try:
-        company_dao = CompanyDAO(db_session)
-        matched_companies_results = company_dao.get_data_by_names(companynames_and_dates)
-        
-        # 각 회사별로 정보를 묶어서 리스트로 반환합니다.
-        grouped_company_data = []
-        for company_name, company_data in matched_companies_results:
-            products = None
-            if isinstance(company_data, dict):
-                products = company_data.get('products')
+    async with get_db() as db_session:
+        try:
+            company_dao = CompanyDAO(db_session)
+            matched_companies_results = await company_dao.get_data_by_names(companynames_and_dates)
             
-            grouped_company_data.append({
-                "name": company_name,
-                "products": products,
-            })
+            # 각 회사별로 정보를 묶어서 리스트로 반환합니다.
+            grouped_company_data = []
+            for company_name, company_data in matched_companies_results:
+                products = None
+                if isinstance(company_data, dict):
+                    products = company_data.get('products')
+                
+                grouped_company_data.append({
+                    "name": company_name,
+                    "products": products,
+                })
 
-        # 1. 모델 선언 (GPT-4o 사용)
-        model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
-        
-        # 2. 구조화된 출력을 위한 LLM 설정 (ExperienceResponse DTO 사용)
-        llm_with_tool = model.with_structured_output(ExperienceResponse)
-        
-        # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
-        chain = prompt | llm_with_tool
+            # 1. 모델 선언 (GPT-4o 사용)
+            model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+            
+            # 2. 구조화된 출력을 위한 LLM 설정 (ExperienceResponse DTO 사용)
+            llm_with_tool = model.with_structured_output(ExperienceResponse)
+            
+            # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
+            chain = prompt | llm_with_tool
 
-        
-        # 4. 기업 경험 LLM 실행
-        answer = chain.invoke({'descriptions' : descriptions, 'grouped_company_data' : grouped_company_data})
-        logger.info(f"판단된 경험: {answer.experience_and_reason}")
-        
-        return {'experience_and_reason':answer.experience_and_reason}
-    finally:
-        db_session.close()
+            # 4. 기업 경험 LLM 실행
+            answer = await chain.ainvoke({'descriptions' : descriptions, 'grouped_company_data' : grouped_company_data})
+            logger.info(f"판단된 경험: {answer.experience_and_reason}")
+            
+            end_time = time.time()
+            logger.info(f"<== (4/4) experience 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")
+
+            return {'experience_and_reason':answer.experience_and_reason}
+        finally:
+            await db_session.close()
 
 
     
@@ -290,7 +316,6 @@ def combine(state: ProfilingState):
     # company_size 처리
     for company_size in company_size_and_reason:
         profile[company_size.company_size] = profile.get(company_size.company_size, []) + company_size.reasons
-
     
     # experience 처리
     for experience in experience_and_reason:

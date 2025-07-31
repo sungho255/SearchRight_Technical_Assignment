@@ -70,3 +70,4 @@ def insert_company_data(db: Session):
 
 if __name__ == "__main__":
     insert_company_data()
+    

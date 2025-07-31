@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.13"
 psycopg2-binary = "^2.9.10"
 openai = "^1.75.0"
-sqlalchemy = "^2.0.41"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.42"}
 fastapi = "^0.116.1"
 uvicorn = "^0.35.0"
 dotenv = "^0.9.9"
@@ -31,6 +31,7 @@ pillow = "^11.3.0"
 tqdm = "^4.67.1"
 pytest = "^8.4.1"
 pytest-asyncio = "^1.1.0"
+asyncpg = "^0.30.0"
 
 
 [build-system]

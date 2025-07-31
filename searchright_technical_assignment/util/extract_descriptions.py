@@ -15,7 +15,7 @@ def get_descriptions(positions):
     """
     logger.info("직책에서 설명을 추출하는 중입니다.")
     # 설명 추출
-    descriptions = [position.get('description') for position in positions if position.get('description')]
+    descriptions = [position.get('description').replace('\n', ' ') for position in positions if position.get('description')]
     logger.info(f"총 {len(descriptions)}개의 설명을 추출했습니다.")
     return descriptions
 

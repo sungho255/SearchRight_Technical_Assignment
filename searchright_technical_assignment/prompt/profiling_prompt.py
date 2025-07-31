@@ -150,7 +150,7 @@ experience_prompt = PromptTemplate(
     다음 'grouped_company_data'는 회사의 정보를 'descriptions'는 경력 정보를 담고 있습니다. 각 필드의 의미는 다음과 같습니다:
     
     grouped_company_data:
-    - products: 어떤 제품/서비스를 운영했는지 → 어떤 도메인에서 일했는지 추론
+    - products: 어떤 제품/서비스를 운영했는지, 어떤 도메인에서 일했는지 추론
     
     descriptions:
     {descriptions}
