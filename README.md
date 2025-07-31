@@ -232,5 +232,3 @@ graph TD
    - Async SQLAlchemy 적용
    - Asyncio.gather 적용  (4 Sec -> 2 Sec)
   
-2. Model Prompt 세분화 (experience 노드)
-   - 회사 정보, 경력 정보를 단위로 세분화
