@@ -39,7 +39,7 @@ router = APIRouter()
 
 # 프로파일링 엔드포인트
 @router.post("/profilling", status_code = status.HTTP_200_OK, tags=['profilling'], response_model=TalentOut)
-async def tech_langgraph(item: TalentIn):
+async def profilling(item: TalentIn):
     """
     지원자 프로파일링을 수행하는 비동기 함수입니다.
 

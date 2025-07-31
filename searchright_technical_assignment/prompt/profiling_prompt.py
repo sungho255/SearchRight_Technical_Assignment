@@ -89,7 +89,6 @@ company_size_prompt = PromptTemplate(
 
     grouped_company_data:
     - name: 화사명
-    - mae: 자본금 (단위: 원)
     - investment: 투자 단계 정보
     - organiztion: 재직자 수
     
@@ -107,13 +106,11 @@ company_size_prompt = PromptTemplate(
     # 분류 기준
     다음과 같은 경우 '성장기스타트업 경험'으로 판단합니다:
     - name에 ‘스타트업’, ‘랩스(Labs)’, ‘벤처’, ‘테크’, ‘소프트’ 등이 포함된 경우 (가능한 경우)
-    - 근무기간 중 mae가 10억 원 이하일 경우
     - 근무기간 중 investment가 Series A ~ C 중 하나일 경우
     - 근무기간 중 organiztion 값이 10명 이상 300명 미만인 경우
 
     다음과 같은 경우 '대규모 회사 경험'으로 판단합니다:
     - name에 ‘주식회사’, ‘대우’, ‘현대’, ‘LG’, ‘삼성’, ‘KT’, ‘SK’ 등 대기업 계열 키워드가 포함된 경우 (가능한 경우)
-    - mae가 100억 원 이상일 경우
     - investment가 None이거나 IPO, 상장, Pre-IPO 등으로 되어 있는 경우
     - organiztion 값이 300명 이상일 경우
 

@@ -20,6 +20,7 @@ from ..db.conn import get_db
 from ..crud.company_dao import CompanyDAO
 from ..model.company import Company
 from ..schema.response_dto import LeadershipResponse, CompanySizeResponse, ExperienceResponse
+from ..util.grouped_data_util import get_grouped_company_data
 
 # 경고 무시 설정
 import warnings
@@ -152,25 +153,9 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
             company_dao = CompanyDAO(db_session)
             matched_companies_results = await company_dao.get_data_by_names(companynames_and_dates)
             
-            # 각 회사별로 정보를 묶어서 리스트로 반환합니다.
-            grouped_company_data = []
-            for company_name, company_data in matched_companies_results:
-                mae = None
-                investment = None
-                organization = None
-                if isinstance(company_data, dict):
-                    mae = company_data.get('mae')
-                    investment = company_data.get('investment')
-                    organization = company_data.get('organization')
-                
-                grouped_company_data.append({
-                    "name": company_name,
-                    "mae": mae,
-                    "investment": investment,
-                    "organization": organization
-                })
+            grouped_company_data = get_grouped_company_data(companynames_and_dates, matched_companies_results)
 
-            # companynames_and_dates에 없는 기업명 추출
+            logger.info(f"[Company Size Node] grouped_company_data (simplified): {grouped_company_data}")
             companynames_and_dates_set = {item['companyName'] for item in companynames_and_dates if 'companyName' in item}
             grouped_company_data_names_set = {company_info['name'] for company_info in grouped_company_data}
 
@@ -215,6 +200,12 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
 
         
             # 4. 기업 경험 LLM 실행
+            logger.info(f"[Company Size Node] Company News Contents length: {sum(len(c) for c_list in company_news_contents.values() for c in c_list) if company_news_contents else 0}")
+            logger.info(f"[Company Size Node] companynames_and_dates: {companynames_and_dates}")
+            logger.info(f"[Company Size Node] grouped_company_data: {grouped_company_data}")
+            logger.info(f"[Company Size Node] Company News Contents: {company_news_contents}")
+            
+            
             answer = await chain.ainvoke({'companynames_and_dates' : companynames_and_dates, 'grouped_company_data' : grouped_company_data, 'company_news_contents': company_news_contents})
             logger.info(f"판단된 회사 규모: {answer.company_size_and_reason}")
         
@@ -257,7 +248,9 @@ async def experience(state: ProfilingState, prompt: PromptTemplate):
             for company_name, company_data in matched_companies_results:
                 products = None
                 if isinstance(company_data, dict):
-                    products = company_data.get('products')
+                    # products 정보를 제품 이름만 포함하도록 간소화
+                    raw_products = company_data.get('products', [])
+                    products = [p.get('name') for p in raw_products if p.get('name')]
                 
                 grouped_company_data.append({
                     "name": company_name,
