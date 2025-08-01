@@ -60,7 +60,16 @@ if not DATABASE_URL:
  
  
 # SQLAlchemy 엔진 생성
-engine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+engine = create_async_engine(
+    DATABASE_URL, 
+    echo=False, 
+    pool_pre_ping=True,
+    pool_size=10,          # 동시에 유지할 수 있는 연결 수
+    max_overflow=5,        # pool_size 초과 시 생성 가능한 임시 연결 수
+    pool_timeout=30,       # 연결 대기 시간 초과 시 에러 (초)
+    pool_recycle=1800,     # 재활용 전 최대 연결 시간 (초))
+)
+
 # 세션 로컬 클래스 생성
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, class_= AsyncSession)
 

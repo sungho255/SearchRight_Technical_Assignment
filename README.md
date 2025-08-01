@@ -228,7 +228,41 @@ graph TD
 
 ## Response 성능 최적화
 
-1. Profiling Node 병렬처리
+### 문제점
+- 반복적인 실행 중 지연 응답 현상 발생(중간중간 6,7초 정도 응답 시간)
+   1. LLM 모델 초기화 및 구조화된 출력 바인딩 (가장 큰 원인):
+      * model = ChatOpenAI(...) 
+      * llm_with_tool = model.with_structured_output(...) 
+      * 원인: 이 부분들은 ChatOpenAI 모델 인스턴스를 생성하고, Pydantic 스키마(LeadershipResponse, CompanySizeResponse, ExperienceResponse)를 OpenAI의 함수 호출(Function Calling)
+        형식으로 변환하여 LLM에 바인딩하는 과정입니다. 이 작업은 매 함수 호출마다 반복적으로 수행되고 있으며, 특히 with_structured_output은 상당한 시간을 차지합니다 (각 함수 시간의
+        37.6%, 54.4%). 이는 네트워크 통신이 아닌, LangChain 라이브러리 내부에서 스키마를 처리하고 LLM 설정을 준비하는 계산 비용입니다.
+      * "지연 응답 현상" 발생 이유: 현재 코드 구조상 각 함수가 호출될 때마다 이 객체들이 새로 생성되므로, 반복 호출 시 매번 이 초기화 및 바인딩 비용이 발생하여 성능 저하로 이어집니다.
+
+
+   2. 데이터베이스 작업:   
+      * await company_dao.get_data_by_names(...)
+      * await db_session.close()
+      * 원인: 데이터베이스에서 데이터를 조회하고 세션을 닫는 과정입니다. 데이터베이스 연결 설정, 쿼리 실행, 결과 전송 등에 네트워크 지연 및 DB 서버의 처리 시간이 포함됩니다.
+      * "지연 응답 현상" 발생 이유: 만약 데이터베이스 연결 풀이 제대로 관리되지 않아 매번 새로운 연결을 맺고 끊는다면, 이 연결 오버헤드가 반복 호출 시 성능 스파이크를 유발할 수 있습니다.
+
+
+   3. LLM API 호출 및 PGVector 검색:
+      * await chain.ainvoke(...) (실제 LLM API 호출)
+      * search_by_keyword (PGVector 검색)
+      * 원인: 이들은 외부 서비스(OpenAI API, PostgreSQL DB)와의 네트워크 통신을 포함하는 I/O 작업입니다. 네트워크 상태, API 서버의 응답 속도, DB 서버의 부하 등에 따라 시간이
+        가변적입니다.
+      * "지연 응답 현상" 발생 이유: 외부 서비스의 일시적인 지연, 네트워크 불안정, API 호출 제한(rate limit) 등이 발생하면 이 부분에서 큰 지연이 발생할 수 있습니다.
+
+### 해결방안 (Line-Profile 사용)
+1. Profiling Node 비동기 적용
    - Async SQLAlchemy 적용
    - Asyncio.gather 적용  (4 Sec -> 2 Sec)
-  
+2. Prompt 간소화
+3. LLM 모델 및 구조화된 출력 객체 초기화를 통해서 한번만 수행
+   - 클라이언트 생성 비용 감소
+        - ChatOpenAI(...) 객체를 매번 새로 만들면 내부적으로 준비 과정이 중복된다:
+            - HTTP 세션 설정
+            - 인증 키 처리
+            - 토큰/파라미터 검증
+4. functools.lru_cache 내장 캐시 적용
+   - LLM API 호출, DB 연결, PGVector 검색 등에서 발생하는 반복적인 오버헤드를 줄인다.

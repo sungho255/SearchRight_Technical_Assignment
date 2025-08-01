@@ -167,7 +167,8 @@ async def insert_company_news_and_vectors(db: Session):
                 collection_name=COLLECTION_NAME,
                 connection_string=DATABASE_URL,
                 embedding_function=embeddings, # PGVector 초기화에 필요
-                pre_delete_collection=True
+                pre_delete_collection=True,
+                async_mode=True,
             )
             vector_store.add_embeddings(texts=pg_texts, embeddings=pg_embeddings, metadatas=pg_metadatas)
             logger.info("PGVector에 임베딩 삽입 완료.")

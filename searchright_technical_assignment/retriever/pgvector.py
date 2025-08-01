@@ -1,6 +1,7 @@
 import os
 import openai
 import logging
+import asyncio
 from dotenv import load_dotenv
 from datetime import datetime
 import calendar # calendar 모듈 임포트
@@ -15,46 +16,48 @@ logger = logging.getLogger(__name__)
 # 환경 변수 로드
 load_dotenv()
 
-# OpenAI API 키 설정 및 임베딩 모델 초기화
+# OpenAI API 키 설정 및 임베딩 모델 초기화 (모듈 레벨에서 한 번만 초기화)
 openai.api_key = os.getenv('OPENAI_API_KEY')
 embeddings = OpenAIEmbeddings()
+
+# PGVector 인스턴스를 위한 싱글톤 변수
+_vectorstore_instance = None
+
+def get_vectorstore_instance():
+    """
+    PGVector 인스턴스를 싱글톤 패턴으로 반환합니다.
+    """
+    global _vectorstore_instance
+    if _vectorstore_instance is None:
+        logger.info("PGVector 인스턴스 초기화 중...")
+        _vectorstore_instance = PGVector(
+            connection_string=os.getenv('PGVECTOR_DATABASE_URL'),
+            embedding_function=embeddings,
+            collection_name="company_news_vectors",
+        )
+        logger.info("PGVector 인스턴스 초기화 완료.")
+    return _vectorstore_instance
 
 def retriever():
     """
     PGVector 기반의 문서 검색기(retriever)를 초기화하고 반환합니다.
-
-    Returns:
-        retriever: PGVector 검색기 인스턴스.
     """
     logger.info("PGVector 검색기 초기화 중.")
-    # PGVector에 연결
-    vectorstore = PGVector(
-        connection_string=os.getenv('DATABASE_URL'),
-        embedding_function=embeddings,
-        collection_name="documents",
-    )
-
-    # 검색기 구성 (유사도 검색, 상위 5개 문서 반환)
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+    # 싱글톤 인스턴스를 사용하여 검색기 구성
+    retriever = get_vectorstore_instance().as_retriever(search_type="similarity", search_kwargs={"k": 5})
     logger.info("PGVector 검색기 초기화 성공.")
     return retriever
 
-import asyncio
 
 def _blocking_search(keyword: str, k: int, start_date_obj: dict = None, end_date_obj: dict = None):
     """
     동기적으로 PGVector 검색을 수행하는 내부 함수입니다.
     """
     logger.info(f"[Blocking] 키워드 '{keyword}'로 검색 시작, 반환 개수 k={k}")
-    # PGVector에 연결 (동기 드라이버 사용)
-    vectorstore = PGVector(
-        connection_string=os.getenv('PGVECTOR_DATABASE_URL'),
-        embedding_function=embeddings,
-        collection_name="company_news_vectors",
-    )
-
+    
     initial_k = k * 3
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": initial_k})
+    # 싱글톤 인스턴스를 사용하여 검색기 구성
+    retriever = get_vectorstore_instance().as_retriever(search_type="similarity", search_kwargs={"k": initial_k})
     logger.info(f"[Blocking] 초기 검색을 위해 키워드 '{keyword}'로 {initial_k}개 문서 검색 중.")
     docs = retriever.get_relevant_documents(keyword)
     logger.info(f"[Blocking] 키워드 '{keyword}'에 대해 초기 {len(docs)}개 문서 발견.")

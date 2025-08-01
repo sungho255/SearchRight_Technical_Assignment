@@ -1,26 +1,29 @@
 ################################################## 라이브러리 #########################################################
 # 기본 모듈 임포트
 import os
+import sys
 import time
 import openai
+import asyncio
 import logging
 from dotenv import load_dotenv
-import asyncio
 
 # LangChain 체인 관련 모듈 임포트
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+# 프로젝트 루트 경로를 sys.path에 추가
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, project_root)
 
-# 사용자 정의 모듈 임포트
-from ..state.profiling_state import ProfilingState
-from ..retriever.pgvector import search_by_keyword
-from ..db.conn import get_db
-from ..crud.company_dao import CompanyDAO
-from ..model.company import Company
-from ..schema.response_dto import LeadershipResponse, CompanySizeResponse, ExperienceResponse
-from ..util.grouped_data_util import get_grouped_company_data
+from searchright_technical_assignment.schema.response_dto import LeadershipResponse, CompanySizeResponse, ExperienceResponse
+from searchright_technical_assignment.crud.company_dao import CompanyDAO
+from searchright_technical_assignment.db.conn import get_db
+from searchright_technical_assignment.model.company import Company
+from searchright_technical_assignment.retriever.pgvector import search_by_keyword
+from searchright_technical_assignment.state.profiling_state import ProfilingState
+from searchright_technical_assignment.util.grouped_data_util import get_grouped_company_data
 
 # 경고 무시 설정
 import warnings
@@ -37,6 +40,14 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 embeddings = OpenAIEmbeddings()
 
+ # --- LLM 모델 및 구조화된 출력 객체 전역 초기화 (재사용) ---
+# ChatOpenAI 모델은 한 번만 초기화
+_global_chat_llm = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+# 각 DTO에 바인딩된 LLM 객체도 한 번만 초기화
+_global_leadership_llm_with_tool = _global_chat_llm.with_structured_output(LeadershipResponse)
+_global_company_size_llm_with_tool = _global_chat_llm.with_structured_output(CompanySizeResponse)
+_global_experience_llm_with_tool = _global_chat_llm.with_structured_output(ExperienceResponse)
+
 
 def input(state: ProfilingState):
     """
@@ -51,7 +62,8 @@ def input(state: ProfilingState):
     """
     logger.info("초기 상태로 그래프 시작.")
     return state
-    
+
+
 # 1. 대학 수준 분별 노드
 async def college_level(state: ProfilingState, prompt: PromptTemplate):
     """
@@ -72,7 +84,7 @@ async def college_level(state: ProfilingState, prompt: PromptTemplate):
     college = state['college']
     
     # 1. 모델 선언 (GPT-4o 사용)
-    model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+    model = _global_chat_llm
     
     # 2. LLM과 문자열 출력 파서를 바인딩하여 체인 생성
     chain = prompt | model | StrOutputParser()
@@ -85,7 +97,6 @@ async def college_level(state: ProfilingState, prompt: PromptTemplate):
     logger.info(f"<== (1/4) college_level 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")
     
     return {'college_level':answer}
-
 
 # 2. 리더십 유무 판단 노드
 async def leadership(state: ProfilingState, prompt: PromptTemplate):
@@ -108,10 +119,10 @@ async def leadership(state: ProfilingState, prompt: PromptTemplate):
     titles = state['titles']
     
     # 1. 모델 선언 (GPT-4o 사용)
-    model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+    # model = _global_chat_llm
     
     # 2. 구조화된 출력을 위한 LLM 설정 (LeadershipResponse DTO 사용)
-    llm_with_tool = model.with_structured_output(LeadershipResponse)
+    llm_with_tool = _global_leadership_llm_with_tool
     
     # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
     chain = prompt | llm_with_tool
@@ -155,7 +166,7 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
             
             grouped_company_data = get_grouped_company_data(companynames_and_dates, matched_companies_results)
 
-            logger.info(f"[Company Size Node] grouped_company_data (simplified): {grouped_company_data}")
+            # logger.info(f"[Company Size Node] grouped_company_data (simplified): {grouped_company_data}")
             companynames_and_dates_set = {item['companyName'] for item in companynames_and_dates if 'companyName' in item}
             grouped_company_data_names_set = {company_info['name'] for company_info in grouped_company_data}
 
@@ -176,7 +187,7 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
                     start_date = date_range.get('start')
                     end_date = date_range.get('end')
                     key_word = f"{company_name}의 투자 규모, 조직 규모"
-                    tasks.append(search_by_keyword(key_word, k=5, start_date_obj=start_date, end_date_obj=end_date))
+                    tasks.append(search_by_keyword(key_word, k=3, start_date_obj=start_date, end_date_obj=end_date))
             
             # 모든 PGVector 검색을 병렬로 실행
             all_relevant_docs = await asyncio.gather(*tasks)
@@ -190,20 +201,20 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
             
 
             # 1. 모델 선언 (GPT-4o 사용)
-            model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+            # model = _global_chat_llm
             
             # 2. 구조화된 출력을 위한 LLM 설정 (CompanySizeResponse DTO 사용)
-            llm_with_tool = model.with_structured_output(CompanySizeResponse)
+            llm_with_tool = _global_company_size_llm_with_tool
             
             # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
             chain = prompt | llm_with_tool
 
         
             # 4. 기업 경험 LLM 실행
-            logger.info(f"[Company Size Node] Company News Contents length: {sum(len(c) for c_list in company_news_contents.values() for c in c_list) if company_news_contents else 0}")
-            logger.info(f"[Company Size Node] companynames_and_dates: {companynames_and_dates}")
-            logger.info(f"[Company Size Node] grouped_company_data: {grouped_company_data}")
-            logger.info(f"[Company Size Node] Company News Contents: {company_news_contents}")
+            # logger.info(f"[Company Size Node] Company News Contents length: {sum(len(c) for c_list in company_news_contents.values() for c in c_list) if company_news_contents else 0}")
+            # logger.info(f"[Company Size Node] companynames_and_dates: {companynames_and_dates}")
+            # logger.info(f"[Company Size Node] grouped_company_data: {grouped_company_data}")
+            # logger.info(f"[Company Size Node] Company News Contents: {company_news_contents}")
             
             
             answer = await chain.ainvoke({'companynames_and_dates' : companynames_and_dates, 'grouped_company_data' : grouped_company_data, 'company_news_contents': company_news_contents})
@@ -216,7 +227,6 @@ async def company_size(state: ProfilingState, prompt: PromptTemplate):
         finally:
             await db_session.close()
     
-
 # 4. 지원자 경험 판단 노드
 async def experience(state: ProfilingState, prompt: PromptTemplate):
     """
@@ -258,17 +268,17 @@ async def experience(state: ProfilingState, prompt: PromptTemplate):
                 })
 
             # 1. 모델 선언 (GPT-4o 사용)
-            model = ChatOpenAI(model='gpt-4o', streaming=True, temperature=0)
+            # model = _global_chat_llm
             
             # 2. 구조화된 출력을 위한 LLM 설정 (ExperienceResponse DTO 사용)
-            llm_with_tool = model.with_structured_output(ExperienceResponse)
+            llm_with_tool = _global_experience_llm_with_tool
             
             # 3. LLM과 구조화된 출력 파서를 바인딩하여 체인 생성
             chain = prompt | llm_with_tool
 
             # 4. 기업 경험 LLM 실행
             answer = await chain.ainvoke({'descriptions' : descriptions, 'grouped_company_data' : grouped_company_data})
-            logger.info(f"판단된 경험: {answer.experience_and_reason}")
+            # logger.info(f"판단된 경험: {answer.experience_and_reason}")
             
             end_time = time.time()
             logger.info(f"<== (4/4) experience 노드 종료 (소요 시간: {end_time - start_time:.2f}초)")
@@ -278,7 +288,6 @@ async def experience(state: ProfilingState, prompt: PromptTemplate):
             await db_session.close()
 
 
-    
 def combine(state: ProfilingState):
     """
     다양한 노드에서 생성된 프로파일링 정보를 결합하여 최종 프로파일을 생성하는 노드입니다.
@@ -314,5 +323,5 @@ def combine(state: ProfilingState):
     for experience in experience_and_reason:
         profile[experience.experience] = experience.reasons
 
-    logger.info(f"결합된 프로파일: {profile}")
+    # logger.info(f"결합된 프로파일: {profile}")
     return {'profile': profile}
