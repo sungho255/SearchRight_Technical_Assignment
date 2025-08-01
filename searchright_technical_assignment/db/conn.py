@@ -71,7 +71,10 @@ engine = create_async_engine(
 )
 
 # 세션 로컬 클래스 생성
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, class_= AsyncSession)
+SessionLocal = sessionmaker(bind=engine, 
+                            autoflush=False, 
+                            autocommit=False, 
+                            class_= AsyncSession,)
 
 # 선언적 기본 클래스 생성
 Base = declarative_base()

@@ -61,7 +61,7 @@ async def mock_get_db():
 async def run_profiling_test():
     # kernprof 출력 헤더 모방
     print("Wrote profile results to 'profiling_node.py.lprof' (This is a mock output, no file is actually written)")
-    print("Timer unit: 1e-06 s")
+    print("Timer unit: 1e-06 s") 
     print()
 
     # talent_ex4.json 파일 로드

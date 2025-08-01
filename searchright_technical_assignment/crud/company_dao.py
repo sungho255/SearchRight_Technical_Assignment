@@ -130,4 +130,4 @@ class CompanyDAO:
         matched_companies_results = result.all() 
         logger.info(f"일치하는 회사 {len(matched_companies_results)}개를 찾았습니다.")
             
-        return matched_companies_results 
+        return matched_companies_results

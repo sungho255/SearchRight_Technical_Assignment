@@ -264,5 +264,5 @@ graph TD
             - HTTP 세션 설정
             - 인증 키 처리
             - 토큰/파라미터 검증
-4. functools.lru_cache 내장 캐시 적용
+4. functools.async-lru 내장 캐시 적용
    - LLM API 호출, DB 연결, PGVector 검색 등에서 발생하는 반복적인 오버헤드를 줄인다.
