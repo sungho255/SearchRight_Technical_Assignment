@@ -231,7 +231,7 @@ graph TD
 ### 문제점
 - 반복적인 실행 중 지연 응답 현상 발생(중간중간 6,7초 정도 응답 시간)
    1. LLM 모델 초기화 및 구조화된 출력 바인딩 (가장 큰 원인):
-      * model = ChatOpenAI(...) 
+      * model = ChatOpenAI(...)
       * llm_with_tool = model.with_structured_output(...) 
       * 원인: 이 부분들은 ChatOpenAI 모델 인스턴스를 생성하고, Pydantic 스키마(LeadershipResponse, CompanySizeResponse, ExperienceResponse)를 OpenAI의 함수 호출(Function Calling)
         형식으로 변환하여 LLM에 바인딩하는 과정입니다. 이 작업은 매 함수 호출마다 반복적으로 수행되고 있으며, 특히 with_structured_output은 상당한 시간을 차지합니다 (각 함수 시간의
@@ -244,7 +244,7 @@ graph TD
       * await db_session.close()
       * 원인: 데이터베이스에서 데이터를 조회하고 세션을 닫는 과정입니다. 데이터베이스 연결 설정, 쿼리 실행, 결과 전송 등에 네트워크 지연 및 DB 서버의 처리 시간이 포함됩니다.
       * "지연 응답 현상" 발생 이유: 만약 데이터베이스 연결 풀이 제대로 관리되지 않아 매번 새로운 연결을 맺고 끊는다면, 이 연결 오버헤드가 반복 호출 시 성능 스파이크를 유발할 수 있습니다.
-
+  
 
    3. LLM API 호출 및 PGVector 검색:
       * await chain.ainvoke(...) (실제 LLM API 호출)
@@ -264,5 +264,5 @@ graph TD
             - HTTP 세션 설정
             - 인증 키 처리
             - 토큰/파라미터 검증
-4. functools.async-lru 내장 캐시 적용
    - LLM API 호출, DB 연결, PGVector 검색 등에서 발생하는 반복적인 오버헤드를 줄인다.
+4. SQLAlchemy engine의 **연결 풀(Pooling)**과 관련된 설정
